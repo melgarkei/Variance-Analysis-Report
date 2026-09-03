@@ -178,7 +178,7 @@
         <div class="control-group">
             <label for="currencyMode">Currency View</label>
             <select id="currencyMode" onchange="updateDashboard()">
-                <option value="SAR">SAR Amount (Converted)</option>
+                <option value="SAR" selected>SAR Amount (Converted)</option>
                 <option value="Local">Original Sheet Currency (Local)</option>
             </select>
         </div>
@@ -296,15 +296,19 @@
         filtered.forEach(item => {
             const key = groupBy === "Category" ? item.category : item.entity;
             if (!aggregated[key]) {
-                aggregated[key] = { projected: 0, actual: 0, curr: currMode === "SAR" ? "SAR" : item.currency };
+                aggregated[key] = { 
+                    projected: 0, 
+                    actual: 0, 
+                    curr: currMode === "SAR" ? "SAR" : item.currency 
+                };
             }
 
-            if (currMode === "SAR") {
-                aggregated[key].projected += item.sarAmt;
-                aggregated[key].actual += item.sarAmt;
-            } else {
-                aggregated[key].projected += item.projLocal;
-                aggregated[key].actual += item.actLocal;
+            const amount = (currMode === "SAR") ? (item.sarAmt || 0) : (item.localAmt || 0);
+
+            if (item.type === 'projection') {
+                aggregated[key].projected += amount;
+            } else if (item.type === 'actual') {
+                aggregated[key].actual += amount;
             }
         });
 
