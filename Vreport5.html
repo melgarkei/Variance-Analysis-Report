@@ -215,7 +215,6 @@
 <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxiJnoD94slP5JudYwsg1vhpo6YpGc6E4240hUXoTGWbFjMY6WhERXuUcDPbTl4F4RA3Q/exec";
 
-    // Master Category List
     const MASTER_CATEGORIES = [
         "Trade - Amex",
         "Trade - VCC",
@@ -228,11 +227,9 @@
         "Trade Air - LCC"
     ];
 
-    // Normalization helper to map messy category text to clean master categories
     function normalizeCategory(catStr) {
         if (!catStr) return null;
         const clean = String(catStr).toLowerCase().replace(/[^a-z0-9]/g, '');
-        
         for (const master of MASTER_CATEGORIES) {
             const masterClean = master.toLowerCase().replace(/[^a-z0-9]/g, '');
             if (clean === masterClean) return master;
@@ -248,7 +245,6 @@
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch(e) {}
             }
-            // Normalize categories in raw data upon fetch
             rawData = data.map(item => {
                 const normCat = normalizeCategory(item.category);
                 return {
@@ -283,12 +279,7 @@
     function populateFilters() {
         populateDropdown('weekSelect', rawData.map(d => d.week), true);
         populateDropdown('entitySelect', rawData.map(d => d.entity), false);
-        
-        // Filter dropdown to show only valid Master Categories
-        const validCats = rawData
-            .map(d => d.category)
-            .filter(cat => MASTER_CATEGORIES.includes(cat));
-        populateDropdown('categorySelect', validCats, false);
+        populateDropdown('categorySelect', MASTER_CATEGORIES, false);
     }
 
     function populateDropdown(id, list, isWeek) {
@@ -329,22 +320,26 @@
             const matchWeek = (selWeek === "All" || d.week === selWeek);
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
-            
-            // Exclude non-master categories when grouping by Category
-            const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
-
-            return matchWeek && matchEntity && matchCat && isValidCat;
+            return matchWeek && matchEntity && matchCat;
         });
 
         const aggregated = {};
+
+        // Pre-initialize master categories if grouping by Category
+        if (groupBy === "Category") {
+            MASTER_CATEGORIES.forEach(cat => {
+                aggregated[cat] = { projected: 0, actual: 0, curr: "SAR" };
+            });
+        }
+
         filtered.forEach(item => {
             const key = groupBy === "Category" ? item.category : item.entity;
+            
+            // Skip non-master categories when grouping by Category
+            if (groupBy === "Category" && !MASTER_CATEGORIES.includes(key)) return;
+
             if (!aggregated[key]) {
-                aggregated[key] = { 
-                    projected: 0, 
-                    actual: 0, 
-                    curr: currMode === "SAR" ? "SAR" : (item.currency || "Local")
-                };
+                aggregated[key] = { projected: 0, actual: 0, curr: currMode === "SAR" ? "SAR" : (item.currency || "Local") };
             }
 
             const amount = (currMode === "SAR") ? (item.sarAmt || 0) : (item.localAmt || 0);
