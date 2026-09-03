@@ -213,31 +213,58 @@
 </div>
 
 <script>
-    // Live Google Apps Script Web App URL
-    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxiJnoD94slP5JudYwsg1vhpo6YpGc6E4240hUXoTGWbFjMY6WhERXuUcDPbTl4F4RA3Q/exec";
+    // Direct Google Sheets Visualization Data Feed
+    const SHEET_ID = "YOUR_SPREADSHEET_ID_HERE";
+    const SHEET_NAME = encodeURIComponent("Copy of Monthly Projection 2026");
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
 
     let rawData = [];
     let chartInstance = null;
 
-    // JSONP request to fetch spreadsheet rows smoothly
-    function fetchLiveGoogleSheetData() {
-        const script = document.createElement('script');
-        script.src = `${GOOGLE_SHEET_API_URL}?callback=handleScriptResponse`;
-        script.onerror = function() {
+    async function fetchLiveGoogleSheetData() {
+        try {
+            const response = await fetch(CSV_URL);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const csvText = await response.text();
+            
+            parseCSVData(csvText);
+            populateFilters();
+            updateDashboard();
+        } catch (err) {
+            console.error(err);
             document.getElementById('tableBody').innerHTML = `
                 <tr>
                     <td colspan="5" class="loading-state" style="color: red;">
-                        Unable to connect to Google Sheets. Please ensure your script deployment permissions are set.
+                        Unable to fetch Google Sheet data. Please ensure the sheet sharing permissions are set to "Anyone with the link can view".
                     </td>
                 </tr>`;
-        };
-        document.body.appendChild(script);
+        }
     }
 
-    function handleScriptResponse(data) {
-        rawData = data;
-        populateFilters();
-        updateDashboard();
+    function parseCSVData(csvText) {
+        const lines = csvText.split('\n');
+        rawData = [];
+
+        // Parse CSV rows starting after header (row 1+)
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            
+            // Regex split handling quotes in CSV
+            const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
+
+            const weekVal = row[0] || "";
+            if (weekVal !== "") {
+                rawData.push({
+                    week: weekVal,
+                    entity: row[5] || "Unknown",
+                    currency: row[8] || "SAR",
+                    projLocal: parseFloat((row[9] || "0").replace(/[^0-9.-]+/g, "")) || 0,
+                    actLocal: parseFloat((row[10] || "0").replace(/[^0-9.-]+/g, "")) || 0,
+                    sarAmt: parseFloat((row[11] || "0").replace(/[^0-9.-]+/g, "")) || 0,
+                    category: row[16] || "Uncategorized"
+                });
+            }
+        }
     }
 
     function populateFilters() {
@@ -277,7 +304,6 @@
         const currMode = document.getElementById('currencyMode').value;
         const groupBy = document.getElementById('groupSelect').value;
 
-        // Apply drop-down filters
         const filtered = rawData.filter(d => {
             const matchWeek = (selWeek === "All" || d.week === selWeek);
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
@@ -285,7 +311,6 @@
             return matchWeek && matchEntity && matchCat;
         });
 
-        // Calculate totals based on view mode
         const aggregated = {};
         filtered.forEach(item => {
             const key = groupBy === "Category" ? item.category : item.entity;
@@ -359,7 +384,7 @@
             const proj = aggregatedData[key].projected;
             const act = aggregatedData[key].actual;
             const curr = aggregatedData[key].curr;
-            const diff = proj - act; // Positive = Under budget, Negative = Over budget
+            const diff = proj - act;
             const isOver = diff < 0;
 
             const row = document.createElement('tr');
@@ -378,7 +403,6 @@
         });
     }
 
-    // Initialize fetching on page load
     fetchLiveGoogleSheetData();
 </script>
 
