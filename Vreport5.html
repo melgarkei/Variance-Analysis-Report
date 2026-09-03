@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Comparison Dashboard</title>
+    <title>Almosafer Financial Comparison Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-body: #f8fafc;
+            --bg-body: #f4f6f8;
             --card-bg: #ffffff;
             --border-color: #e2e8f0;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --blue-proj: #3b82f6;
-            --navy-act: #1e3a8a;
-            --red-over: #dc2626;
-            --green-under: #16a34a;
+            --almosafer-navy: #002b3a;
+            --almosafer-teal: #00a8b5;
+            --almosafer-coral: #e63946;
+            --almosafer-green: #2a9d8f;
+            --text-primary: #0a2540;
+            --text-secondary: #4a5568;
         }
 
         body {
@@ -32,25 +32,73 @@
             margin: 0 auto;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        .title {
-            font-size: 18px;
+        /* Branding Header */
+        .brand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-arabic {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--almosafer-navy);
+            line-height: 1.1;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-english {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--almosafer-navy);
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .logo-accent {
+            color: var(--almosafer-teal);
+            position: relative;
+        }
+
+        .brand-title-badge {
+            background-color: #e6f7f9;
+            color: var(--almosafer-navy);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 700;
-            margin-bottom: 20px;
-            color: var(--text-primary);
+            border: 1px solid #b2ebf2;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .controls-container {
             display: flex;
             gap: 16px;
-            background-color: #f1f5f9;
-            padding: 16px;
-            border-radius: 6px;
-            margin-bottom: 24px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 28px;
             align-items: center;
             flex-wrap: wrap;
         }
@@ -58,18 +106,19 @@
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
         label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: var(--almosafer-navy);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         select {
-            padding: 8px 12px;
+            padding: 9px 12px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
             background-color: #ffffff;
@@ -78,19 +127,24 @@
             outline: none;
             cursor: pointer;
             min-width: 150px;
+            transition: border-color 0.2s ease;
+        }
+
+        select:focus {
+            border-color: var(--almosafer-teal);
         }
 
         .section-label {
             font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: var(--almosafer-navy);
         }
 
         .chart-container {
             position: relative;
             height: 360px;
-            margin-bottom: 32px;
+            margin-bottom: 36px;
         }
 
         table {
@@ -101,10 +155,11 @@
         }
 
         th {
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-weight: 700;
+            color: var(--almosafer-navy);
             padding: 12px 16px;
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--almosafer-navy);
+            background-color: #f8fafc;
         }
 
         td {
@@ -116,8 +171,9 @@
         tfoot td {
             font-weight: 700;
             background-color: #f8fafc;
-            border-top: 2px solid var(--text-primary);
+            border-top: 2px solid var(--almosafer-navy);
             border-bottom: none;
+            color: var(--almosafer-navy);
         }
 
         .num-col {
@@ -127,23 +183,24 @@
 
         .status-badge {
             display: inline-block;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             text-align: center;
+            letter-spacing: 0.5px;
         }
 
         .status-over {
-            background-color: #fef2f2;
-            color: var(--red-over);
-            border: 1px solid #fecaca;
+            background-color: #fdf2f2;
+            color: var(--almosafer-coral);
+            border: 1px solid #f8d7da;
         }
 
         .status-under {
-            background-color: #f0fdf4;
-            color: var(--green-under);
-            border: 1px solid #bbf7d0;
+            background-color: #e6f4f1;
+            color: var(--almosafer-green);
+            border: 1px solid #b2dfdb;
         }
 
         .loading-state {
@@ -157,7 +214,22 @@
 <body>
 
 <div class="dashboard-card">
-    <div class="title">Main Comparison Dashboard</div>
+    <!-- Brand Top Header -->
+    <div class="brand-header">
+        <div class="brand-logo-container">
+            <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Luggage Accent Icon -->
+                <rect x="25" y="30" width="50" height="45" rx="6" fill="#00A8B5"/>
+                <path d="M40 30 V20 Q40 15 45 15 H55 Q60 15 60 20 V30" stroke="#002B3A" stroke-width="6" fill="none"/>
+                <path d="M25 50 H75" stroke="#E63946" stroke-width="6"/>
+            </svg>
+            <div class="logo-text-wrapper">
+                <span class="logo-arabic">المـســافـر</span>
+                <span class="logo-english">Alm<span class="logo-accent">o</span>safer</span>
+            </div>
+        </div>
+        <div class="brand-title-badge">Variance Analysis Report 2026</div>
+    </div>
 
     <!-- Multi-Filter Control Bar -->
     <div class="controls-container">
@@ -419,13 +491,13 @@
                     {
                         label: `Projected (${currMode})`,
                         data: projectedData,
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#00a8b5', // Almosafer Teal
                         borderRadius: 4
                     },
                     {
                         label: `Actual (${currMode})`,
                         data: actualData,
-                        backgroundColor: '#1e3a8a',
+                        backgroundColor: '#002b3a', // Almosafer Navy
                         borderRadius: 4
                     }
                 ]
@@ -485,7 +557,6 @@
             tbody.appendChild(row);
         });
 
-        // Add Total Summary Footer Row
         const totalDiff = totalProj - totalAct;
         const totalIsOver = totalDiff < 0;
 
