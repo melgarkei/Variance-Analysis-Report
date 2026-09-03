@@ -228,13 +228,13 @@
     ];
 
     function normalizeCategory(catStr) {
-        if (!catStr) return "Uncategorized";
+        if (!catStr) return null;
         const clean = String(catStr).toLowerCase().replace(/[^a-z0-9]/g, '');
         for (const master of MASTER_CATEGORIES) {
             const masterClean = master.toLowerCase().replace(/[^a-z0-9]/g, '');
             if (clean === masterClean) return master;
         }
-        return String(catStr).trim();
+        return null; // Return null for staff names so they get discarded
     }
 
     let rawData = [];
@@ -320,7 +320,8 @@
             const matchWeek = (selWeek === "All" || d.type === "actual" || d.week === selWeek);
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
-            return matchWeek && matchEntity && matchCat;
+            const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
+            return matchWeek && matchEntity && matchCat && isValidCat;
         });
 
         const aggregated = {};
