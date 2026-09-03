@@ -215,20 +215,30 @@
 <script>
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxiJnoD94slP5JudYwsg1vhpo6YpGc6E4240hUXoTGWbFjMY6WhERXuUcDPbTl4F4RA3Q/exec";
 
-    // Strictly defined list of approved categories
-    const OFFICIAL_CATEGORIES = [
+    // Master Category List
+    const MASTER_CATEGORIES = [
         "Trade - Amex",
-        "Trade - Vcc",
         "Trade - VCC",
         "Customer Refunds",
         "Trade - Non Air",
         "Non Trade - Other",
         "Trade Air - BSP",
         "Non Trade - Payroll",
-        "Trade Air -GSA",
         "Trade Air - GSA",
         "Trade Air - LCC"
     ];
+
+    // Normalization helper to map messy category text to clean master categories
+    function normalizeCategory(catStr) {
+        if (!catStr) return null;
+        const clean = String(catStr).toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        for (const master of MASTER_CATEGORIES) {
+            const masterClean = master.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (clean === masterClean) return master;
+        }
+        return null;
+    }
 
     let rawData = [];
     let chartInstance = null;
@@ -238,7 +248,14 @@
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch(e) {}
             }
-            rawData = data;
+            // Normalize categories in raw data upon fetch
+            rawData = data.map(item => {
+                const normCat = normalizeCategory(item.category);
+                return {
+                    ...item,
+                    category: normCat || item.category
+                };
+            });
             populateFilters();
             updateDashboard();
         };
@@ -267,11 +284,11 @@
         populateDropdown('weekSelect', rawData.map(d => d.week), true);
         populateDropdown('entitySelect', rawData.map(d => d.entity), false);
         
-        // Populate category dropdown strictly from official categories present in rawData
-        const presentCategories = rawData
+        // Filter dropdown to show only valid Master Categories
+        const validCats = rawData
             .map(d => d.category)
-            .filter(cat => OFFICIAL_CATEGORIES.includes(cat));
-        populateDropdown('categorySelect', presentCategories, false);
+            .filter(cat => MASTER_CATEGORIES.includes(cat));
+        populateDropdown('categorySelect', validCats, false);
     }
 
     function populateDropdown(id, list, isWeek) {
@@ -284,7 +301,6 @@
             unique.sort();
         }
 
-        // Clear existing non-default options
         select.innerHTML = select.options[0].outerHTML;
 
         unique.forEach(item => {
@@ -314,8 +330,8 @@
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
             
-            // Only aggregate valid categories when grouping by Category
-            const isValidCat = (groupBy === "Category") ? OFFICIAL_CATEGORIES.includes(d.category) : true;
+            // Exclude non-master categories when grouping by Category
+            const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
 
             return matchWeek && matchEntity && matchCat && isValidCat;
         });
