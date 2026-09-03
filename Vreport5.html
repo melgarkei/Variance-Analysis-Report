@@ -89,7 +89,7 @@
 
         .chart-container {
             position: relative;
-            height: 320px;
+            height: 360px;
             margin-bottom: 32px;
         }
 
@@ -186,20 +186,20 @@
         <div class="control-group">
             <label for="groupSelect">Group By</label>
             <select id="groupSelect" onchange="updateDashboard()">
-                <option value="Category">Category</option>
+                <option value="Category" selected>Category (Default)</option>
                 <option value="Entity">Entity</option>
             </select>
         </div>
     </div>
 
     <!-- Chart Visual -->
-    <div class="section-label">Primary Visual: Projected vs. Actual</div>
+    <div class="section-label">Primary Visual: Category Breakdown (Projected vs. Actual)</div>
     <div class="chart-container">
         <canvas id="comparisonChart"></canvas>
     </div>
 
     <!-- Breakdown Table -->
-    <div class="section-label">Data Table Breakdown</div>
+    <div class="section-label">Category Summary Data</div>
     <table>
         <thead>
             <tr id="tableHeader"></tr>
