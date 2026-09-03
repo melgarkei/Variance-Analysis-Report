@@ -77,7 +77,7 @@
             color: var(--text-primary);
             outline: none;
             cursor: pointer;
-            min-width: 160px;
+            min-width: 150px;
         }
 
         .section-label {
@@ -154,6 +154,13 @@
 
     <!-- Multi-Filter Control Bar -->
     <div class="controls-container">
+        <div class="control-group">
+            <label for="monthSelect">Month</label>
+            <select id="monthSelect" onchange="updateDashboard()">
+                <option value="All">All Months</option>
+            </select>
+        </div>
+
         <div class="control-group">
             <label for="weekSelect">Week</label>
             <select id="weekSelect" onchange="updateDashboard()">
@@ -234,7 +241,13 @@
             const masterClean = master.toLowerCase().replace(/[^a-z0-9]/g, '');
             if (clean === masterClean) return master;
         }
-        return null; // Return null for staff names so they get discarded
+        return null;
+    }
+
+    function getWeekKey(weekStr) {
+        if (!weekStr) return "";
+        const m = String(weekStr).match(/Week\s*(\d+)/i) || String(weekStr).match(/^(\d+)$/);
+        return m ? "Week " + m[1] : String(weekStr).trim();
     }
 
     let rawData = [];
@@ -248,7 +261,8 @@
 
             rawData = (data || []).map(item => ({
                 ...item,
-                category: normalizeCategory(item.category)
+                category: normalizeCategory(item.category),
+                normalizedWeek: getWeekKey(item.week)
             }));
 
             populateFilters();
@@ -276,8 +290,8 @@
     }
 
     function populateFilters() {
-        const projWeeks = rawData.filter(d => d.type === 'projection').map(d => d.week);
-        populateDropdown('weekSelect', projWeeks, true);
+        populateDropdown('monthSelect', rawData.map(d => d.month), false);
+        populateDropdown('weekSelect', rawData.map(d => d.week), true);
         populateDropdown('entitySelect', rawData.map(d => d.entity), false);
         populateDropdown('categorySelect', MASTER_CATEGORIES, false);
     }
@@ -310,18 +324,23 @@
     function updateDashboard() {
         if (!rawData.length) return;
 
+        const selMonth = document.getElementById('monthSelect').value;
         const selWeek = document.getElementById('weekSelect').value;
         const selEntity = document.getElementById('entitySelect').value;
         const selCat = document.getElementById('categorySelect').value;
         const currMode = document.getElementById('currencyMode').value;
         const groupBy = document.getElementById('groupSelect').value;
 
+        const selWeekKey = (selWeek !== "All") ? getWeekKey(selWeek) : "All";
+
         const filtered = rawData.filter(d => {
-            const matchWeek = (selWeek === "All" || d.type === "actual" || d.week === selWeek);
+            const matchMonth = (selMonth === "All" || d.month === selMonth);
+            const matchWeek = (selWeek === "All" || d.week === selWeek || d.normalizedWeek === selWeekKey);
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
             const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
-            return matchWeek && matchEntity && matchCat && isValidCat;
+            
+            return matchMonth && matchWeek && matchEntity && matchCat && isValidCat;
         });
 
         const aggregated = {};
