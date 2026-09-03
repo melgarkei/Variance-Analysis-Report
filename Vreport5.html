@@ -213,56 +213,30 @@
 </div>
 
 <script>
-    // Direct Google Sheets Data Feed using your Sheet ID
-    const SHEET_ID = "1td4rmHR5pu2hK3KwGyRlCy2Ta7b00A38XkX2yvciKDo";
-    const SHEET_NAME = encodeURIComponent("Copy of Monthly Projection 2026");
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+    // Live Apps Script Execution URL using JSONP to bypass CORS/Workspace restrictions
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxiJnoD94slP5JudYwsg1vhpo6YpGc6E4240hUXoTGWbFjMY6WhERXuUcDPbTl4F4RA3Q/exec";
 
     let rawData = [];
     let chartInstance = null;
 
-    async function fetchLiveGoogleSheetData() {
-        try {
-            const response = await fetch(CSV_URL);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const csvText = await response.text();
-            
-            parseCSVData(csvText);
-            populateFilters();
-            updateDashboard();
-        } catch (err) {
-            console.error(err);
+    function fetchLiveGoogleSheetData() {
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SHEET_API_URL}?callback=handleScriptResponse`;
+        script.onerror = function() {
             document.getElementById('tableBody').innerHTML = `
                 <tr>
                     <td colspan="5" class="loading-state" style="color: red;">
-                        Unable to fetch Google Sheet data. Please ensure the sheet sharing permissions are set to "Anyone with the link can view".
+                        Unable to connect to Google Sheets. Please check your Apps Script deployment permissions.
                     </td>
                 </tr>`;
-        }
+        };
+        document.body.appendChild(script);
     }
 
-    function parseCSVData(csvText) {
-        const lines = csvText.split('\n');
-        rawData = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            
-            const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
-
-            const weekVal = row[0] || "";
-            if (weekVal !== "") {
-                rawData.push({
-                    week: weekVal,
-                    entity: row[5] || "Unknown",
-                    currency: row[8] || "SAR",
-                    projLocal: parseFloat((row[9] || "0").replace(/[^0-9.-]+/g, "")) || 0,
-                    actLocal: parseFloat((row[10] || "0").replace(/[^0-9.-]+/g, "")) || 0,
-                    sarAmt: parseFloat((row[11] || "0").replace(/[^0-9.-]+/g, "")) || 0,
-                    category: row[16] || "Uncategorized"
-                });
-            }
-        }
+    function handleScriptResponse(data) {
+        rawData = data;
+        populateFilters();
+        updateDashboard();
     }
 
     function populateFilters() {
