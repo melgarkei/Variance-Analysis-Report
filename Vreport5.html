@@ -1,4 +1,4 @@
-<index.html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -123,4 +123,264 @@
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
-            font-weight
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .status-over {
+            background-color: #fef2f2;
+            color: var(--red-over);
+            border: 1px solid #fecaca;
+        }
+
+        .status-under {
+            background-color: #f0fdf4;
+            color: var(--green-under);
+            border: 1px solid #bbf7d0;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-card">
+    <div class="title">Main Comparison Dashboard</div>
+
+    <!-- Multi-Filter Control Bar -->
+    <div class="controls-container">
+        <div class="control-group">
+            <label for="weekSelect">Week</label>
+            <select id="weekSelect" onchange="updateDashboard()">
+                <option value="All">All Weeks</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="entitySelect">Entity (Country)</label>
+            <select id="entitySelect" onchange="updateDashboard()">
+                <option value="All">All Entities</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="categorySelect">Category</label>
+            <select id="categorySelect" onchange="updateDashboard()">
+                <option value="All">All Categories</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="currencyMode">Currency View</label>
+            <select id="currencyMode" onchange="updateDashboard()">
+                <option value="SAR">SAR Amount (Converted)</option>
+                <option value="Local">Original Sheet Currency (Local)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="groupSelect">Group By</label>
+            <select id="groupSelect" onchange="updateDashboard()">
+                <option value="Category">Category</option>
+                <option value="Entity">Entity</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Chart Visual -->
+    <div class="section-label">Primary Visual: Projected vs. Actual</div>
+    <div class="chart-container">
+        <canvas id="comparisonChart"></canvas>
+    </div>
+
+    <!-- Breakdown Table -->
+    <div class="section-label">Data Table Breakdown</div>
+    <table>
+        <thead>
+            <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr>
+                <td colspan="5" class="loading-state">Connecting to Google Sheet...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Live Google Apps Script Web App URL
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxiJnoD94slP5JudYwsg1vhpo6YpGc6E4240hUXoTGWbFjMY6WhERXuUcDPbTl4F4RA3Q/exec";
+
+    let rawData = [];
+    let chartInstance = null;
+
+    // JSONP request to fetch spreadsheet rows smoothly
+    function fetchLiveGoogleSheetData() {
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SHEET_API_URL}?callback=handleScriptResponse`;
+        script.onerror = function() {
+            document.getElementById('tableBody').innerHTML = `
+                <tr>
+                    <td colspan="5" class="loading-state" style="color: red;">
+                        Unable to connect to Google Sheets. Please ensure your script deployment permissions are set.
+                    </td>
+                </tr>`;
+        };
+        document.body.appendChild(script);
+    }
+
+    function handleScriptResponse(data) {
+        rawData = data;
+        populateFilters();
+        updateDashboard();
+    }
+
+    function populateFilters() {
+        populateDropdown('weekSelect', rawData.map(d => d.week), true);
+        populateDropdown('entitySelect', rawData.map(d => d.entity), false);
+        populateDropdown('categorySelect', rawData.map(d => d.category), false);
+    }
+
+    function populateDropdown(id, list, isWeek) {
+        const select = document.getElementById(id);
+        const unique = [...new Set(list)].filter(Boolean);
+
+        if (isWeek) {
+            unique.sort((a, b) => (parseInt(a.match(/\d+/) || 0) - parseInt(b.match(/\d+/) || 0)));
+        } else {
+            unique.sort();
+        }
+
+        unique.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item;
+            opt.textContent = item;
+            select.appendChild(opt);
+        });
+    }
+
+    function formatCurrency(val, currencyLabel) {
+        return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currencyLabel;
+    }
+
+    function updateDashboard() {
+        if (!rawData.length) return;
+
+        const selWeek = document.getElementById('weekSelect').value;
+        const selEntity = document.getElementById('entitySelect').value;
+        const selCat = document.getElementById('categorySelect').value;
+        const currMode = document.getElementById('currencyMode').value;
+        const groupBy = document.getElementById('groupSelect').value;
+
+        // Apply drop-down filters
+        const filtered = rawData.filter(d => {
+            const matchWeek = (selWeek === "All" || d.week === selWeek);
+            const matchEntity = (selEntity === "All" || d.entity === selEntity);
+            const matchCat = (selCat === "All" || d.category === selCat);
+            return matchWeek && matchEntity && matchCat;
+        });
+
+        // Calculate totals based on view mode
+        const aggregated = {};
+        filtered.forEach(item => {
+            const key = groupBy === "Category" ? item.category : item.entity;
+            if (!aggregated[key]) {
+                aggregated[key] = { projected: 0, actual: 0, curr: currMode === "SAR" ? "SAR" : item.currency };
+            }
+
+            if (currMode === "SAR") {
+                aggregated[key].projected += item.sarAmt;
+                aggregated[key].actual += item.sarAmt;
+            } else {
+                aggregated[key].projected += item.projLocal;
+                aggregated[key].actual += item.actLocal;
+            }
+        });
+
+        const labels = Object.keys(aggregated);
+        const projectedData = labels.map(l => aggregated[l].projected);
+        const actualData = labels.map(l => aggregated[l].actual);
+
+        renderChart(labels, projectedData, actualData, currMode);
+        renderTable(aggregated, groupBy, currMode);
+    }
+
+    function renderChart(labels, projectedData, actualData, currMode) {
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `Projected (${currMode})`,
+                        data: projectedData,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    },
+                    {
+                        label: `Actual (${currMode})`,
+                        data: actualData,
+                        backgroundColor: '#1e3a8a',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    }
+
+    function renderTable(aggregatedData, groupBy, currMode) {
+        const headerRow = document.getElementById('tableHeader');
+        const tbody = document.getElementById('tableBody');
+
+        headerRow.innerHTML = `
+            <th>${groupBy === "Category" ? "Category" : "Entity"}</th>
+            <th class="num-col">Projected Amount</th>
+            <th class="num-col">Actual Amount</th>
+            <th class="num-col">Difference</th>
+            <th style="text-align: center;">Status</th>
+        `;
+
+        tbody.innerHTML = '';
+
+        Object.keys(aggregatedData).forEach(key => {
+            const proj = aggregatedData[key].projected;
+            const act = aggregatedData[key].actual;
+            const curr = aggregatedData[key].curr;
+            const diff = proj - act; // Positive = Under budget, Negative = Over budget
+            const isOver = diff < 0;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${key}</td>
+                <td class="num-col">${formatCurrency(proj, curr)}</td>
+                <td class="num-col">${formatCurrency(act, curr)}</td>
+                <td class="num-col">${formatCurrency(Math.abs(diff), curr)}</td>
+                <td style="text-align: center;">
+                    <span class="status-badge ${isOver ? 'status-over' : 'status-under'}">
+                        ${isOver ? 'OVER BUDGET' : 'UNDER BUDGET'}
+                    </span>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // Initialize fetching on page load
+    fetchLiveGoogleSheetData();
+</script>
+
+</body>
+</html>
