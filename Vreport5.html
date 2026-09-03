@@ -213,8 +213,8 @@
 </div>
 
 <script>
-    // Direct Google Sheets Visualization Data Feed
-    const SHEET_ID = "YOUR_SPREADSHEET_ID_HERE";
+    // Direct Google Sheets Data Feed using your Sheet ID
+    const SHEET_ID = "1td4rmHR5pu2hK3KwGyRlCy2Ta7b00A38XkX2yvciKDo";
     const SHEET_NAME = encodeURIComponent("Copy of Monthly Projection 2026");
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
 
@@ -245,11 +245,9 @@
         const lines = csvText.split('\n');
         rawData = [];
 
-        // Parse CSV rows starting after header (row 1+)
         for (let i = 1; i < lines.length; i++) {
             if (!lines[i].trim()) continue;
             
-            // Regex split handling quotes in CSV
             const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
 
             const weekVal = row[0] || "";
