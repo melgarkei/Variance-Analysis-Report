@@ -37,7 +37,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        /* Branding Header */
         .brand-header {
             display: flex;
             justify-content: space-between;
@@ -76,7 +75,6 @@
 
         .logo-accent {
             color: var(--almosafer-teal);
-            position: relative;
         }
 
         .brand-title-badge {
@@ -218,7 +216,6 @@
     <div class="brand-header">
         <div class="brand-logo-container">
             <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Luggage Accent Icon -->
                 <rect x="25" y="30" width="50" height="45" rx="6" fill="#00A8B5"/>
                 <path d="M40 30 V20 Q40 15 45 15 H55 Q60 15 60 20 V30" stroke="#002B3A" stroke-width="6" fill="none"/>
                 <path d="M25 50 H75" stroke="#E63946" stroke-width="6"/>
@@ -491,13 +488,13 @@
                     {
                         label: `Projected (${currMode})`,
                         data: projectedData,
-                        backgroundColor: '#00a8b5', // Almosafer Teal
+                        backgroundColor: '#00a8b5',
                         borderRadius: 4
                     },
                     {
                         label: `Actual (${currMode})`,
                         data: actualData,
-                        backgroundColor: '#002b3a', // Almosafer Navy
+                        backgroundColor: '#002b3a',
                         borderRadius: 4
                     }
                 ]
