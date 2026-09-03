@@ -245,6 +245,7 @@
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch(e) {}
             }
+
             rawData = data.map(item => {
                 const normCat = normalizeCategory(item.category);
                 return {
@@ -252,6 +253,7 @@
                     category: normCat || item.category
                 };
             });
+
             populateFilters();
             updateDashboard();
         };
@@ -325,7 +327,6 @@
 
         const aggregated = {};
 
-        // Pre-initialize master categories if grouping by Category
         if (groupBy === "Category") {
             MASTER_CATEGORIES.forEach(cat => {
                 aggregated[cat] = { projected: 0, actual: 0, curr: "SAR" };
@@ -335,7 +336,6 @@
         filtered.forEach(item => {
             const key = groupBy === "Category" ? item.category : item.entity;
             
-            // Skip non-master categories when grouping by Category
             if (groupBy === "Category" && !MASTER_CATEGORIES.includes(key)) return;
 
             if (!aggregated[key]) {
