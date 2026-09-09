@@ -578,7 +578,7 @@
                 dataPhase1 = response;
             }
 
-            // Phase 1 Data Mapping
+            // Phase 1 Mapping
             rawData = dataPhase1.map(item => ({
                 ...item,
                 month: cleanMonthString(item.month),
@@ -590,7 +590,7 @@
             populateFilters();
             updateDashboard();
 
-            // Phase 2 Data Mapping
+            // Phase 2 Mapping
             rawDataPhase2 = dataPhase2.map(item => ({
                 ...item,
                 month: cleanMonthString(item.month),
@@ -630,7 +630,7 @@
     let chartInstance = null;
 
     function normalizeCategory(catStr) {
-        if (!catStr) return null;
+        if (!catStr) return "Non Trade - Other";
         const clean = String(catStr).toLowerCase();
 
         for (const master of MASTER_CATEGORIES) {
@@ -765,11 +765,10 @@
         const currMode = document.getElementById('currencyMode').value;
         const groupBy = document.getElementById('groupSelect').value;
 
-        const selWeekKey = (selWeek !== "All") ? getWeekKey(selWeek) : "All";
-
+        // FIXED FILTER LOGIC: Ignores week filter mismatch for Projections when "All Weeks" is selected
         const filtered = rawData.filter(d => {
             const matchMonth = (selMonth === "All" || d.month === selMonth);
-            const matchWeek = (selWeek === "All" || d.week === selWeek || d.normalizedWeek === selWeekKey);
+            const matchWeek = (selWeek === "All") ? true : (d.week === selWeek || d.normalizedWeek === getWeekKey(selWeek));
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
             const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
