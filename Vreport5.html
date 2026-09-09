@@ -670,7 +670,6 @@
 
     function getWeekKey(weekStr) {
         if (!weekStr) return "";
-        // Extracts 'Week 36' from 'Week 36: 06 Sep – 12 Sep 2026'
         const m = String(weekStr).match(/Week\s*(\d+)/i);
         if (m) return "Week " + m[1];
         const numOnly = String(weekStr).match(/^(\d+)$/);
@@ -790,14 +789,15 @@
             const curr = String(item.currency || "SAR").toUpperCase().trim();
             if (!aggregated[key].byCurr[curr]) aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
 
+            // DIRECT UNTOUCHED SAR SUMMING: Reads sarAmt directly without conversion when in SAR mode
             const sarAmt = Number(item.sarAmt || 0);
             const localAmt = Number(item.localAmt || 0);
 
             if (item.type === 'projection') {
-                aggregated[key].projected += (currMode === "SAR") ? sarAmt : localAmt;
+                aggregated[key].projected += (currMode === "SAR" || selEntity === "All") ? sarAmt : localAmt;
                 aggregated[key].byCurr[curr].projected += localAmt;
             } else if (item.type === 'actual') {
-                aggregated[key].actual += (currMode === "SAR") ? sarAmt : localAmt;
+                aggregated[key].actual += (currMode === "SAR" || selEntity === "All") ? sarAmt : localAmt;
                 aggregated[key].byCurr[curr].actual += localAmt;
             }
         });
@@ -855,7 +855,7 @@
             const catObj = aggregatedData[key];
             const proj = catObj.projected, act = catObj.actual, diff = proj - act;
 
-            if (currMode === "SAR") {
+            if (currMode === "SAR" || selEntity === "All") {
                 const badge = getStatusBadge(proj, act);
                 tbody.innerHTML += `
                     <tr>
