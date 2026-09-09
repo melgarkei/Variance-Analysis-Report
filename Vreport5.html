@@ -275,6 +275,13 @@
             font-size: 13px;
         }
 
+        .entity-total-row td {
+            font-weight: 700;
+            background-color: #e6f7f9;
+            color: var(--almosafer-navy);
+            border-bottom: 2px solid #b2ebf2;
+        }
+
         tfoot td {
             font-weight: 800;
             background-color: #f8fafc;
@@ -669,34 +676,26 @@
         }
     }
 
-    function convertToTargetCurrency(amount, fromCurr, targetCurr) {
-        if (!amount) return 0;
-        const from = String(fromCurr || "SAR").toUpperCase().trim();
-        const target = String(targetCurr || "SAR").toUpperCase().trim();
-
-        if (from === target) return amount;
-
-        const rateToAED = FX_RATES_TO_AED[from] !== undefined ? FX_RATES_TO_AED[from] : 1;
-        const amountInAED = amount * rateToAED;
-
-        if (target === 'AED') return amountInAED;
-
-        const targetRateToAED = FX_RATES_TO_AED[target] !== undefined ? FX_RATES_TO_AED[target] : 1;
-        return amountInAED / targetRateToAED;
-    }
-
-    // Evaluates context to ensure All Entities defaults to SAR
-    function getTargetEntityCurrency(entityStr, currMode) {
-        if (currMode === "SAR" || !entityStr || entityStr === "All") {
-            return "SAR";
-        }
-
-        const clean = String(entityStr).toLowerCase().trim();
+    function getNativeEntityCurrency(entityStr) {
+        const clean = String(entityStr || "").toLowerCase().trim();
         if (clean.indexOf("emirates") !== -1 || clean.indexOf("uae") !== -1) return "AED";
         if (clean.indexOf("kuwait") !== -1) return "KWD";
         if (clean.indexOf("saudia") !== -1 || clean.indexOf("ksa") !== -1) return "SAR";
-
         return "SAR";
+    }
+
+    function convertLocalToNativeEntityCurrency(amount, fromCurr, targetEntity) {
+        const targetCurr = getNativeEntityCurrency(targetEntity);
+        if (!amount || fromCurr === targetCurr) return amount;
+
+        const from = String(fromCurr || "SAR").toUpperCase().trim();
+        const rateToAED = FX_RATES_TO_AED[from] !== undefined ? FX_RATES_TO_AED[from] : 1;
+        const amountInAED = amount * rateToAED;
+
+        if (targetCurr === 'AED') return amountInAED;
+
+        const targetRateToAED = FX_RATES_TO_AED[targetCurr] !== undefined ? FX_RATES_TO_AED[targetCurr] : 1;
+        return amountInAED / targetRateToAED;
     }
 
     function updateDashboard() {
@@ -758,7 +757,7 @@
         const actualData = labels.map(l => aggregated[l].actual);
 
         renderChart(labels, projectedData, actualData, currMode);
-        renderTable(aggregated, filtered, groupBy, currMode, selEntity);
+        renderTable(aggregated, filtered, groupBy, currMode);
     }
 
     function renderChart(labels, projectedData, actualData, currMode) {
@@ -792,7 +791,7 @@
         });
     }
 
-    function renderTable(aggregatedData, filteredRaw, groupBy, currMode, activeEntity) {
+    function renderTable(aggregatedData, filteredRaw, groupBy, currMode) {
         const headerRow = document.getElementById('tableHeader');
         const tbody = document.getElementById('tableBody');
         const tfoot = document.getElementById('tableFooter');
@@ -808,19 +807,13 @@
 
         tbody.innerHTML = '';
 
-        const targetGrandCurr = getTargetEntityCurrency(activeEntity, currMode);
-
-        let totalProjConverted = 0;
-        let totalActConverted = 0;
+        // Standard SAR totals straight from spreadsheet pre-converted SAR columns
+        let grandProjSAR = 0;
+        let grandActSAR = 0;
 
         filteredRaw.forEach(item => {
-            if (currMode === "SAR") {
-                if (item.type === 'projection') totalProjConverted += item.sarAmt;
-                if (item.type === 'actual') totalActConverted += item.sarAmt;
-            } else {
-                if (item.type === 'projection') totalProjConverted += convertToTargetCurrency(item.localAmt, item.currency, targetGrandCurr);
-                if (item.type === 'actual') totalActConverted += convertToTargetCurrency(item.localAmt, item.currency, targetGrandCurr);
-            }
+            if (item.type === 'projection') grandProjSAR += Number(item.sarAmt || 0);
+            if (item.type === 'actual') grandActSAR += Number(item.sarAmt || 0);
         });
 
         Object.keys(aggregatedData).forEach(key => {
@@ -844,6 +837,7 @@
                 `;
                 tbody.appendChild(row);
             } else {
+                // Header row
                 const catHeaderRow = document.createElement('tr');
                 catHeaderRow.className = 'cat-header-row';
                 catHeaderRow.innerHTML = `
@@ -852,14 +846,18 @@
                 tbody.appendChild(catHeaderRow);
 
                 const currencies = Object.keys(catObj.byCurr);
+                let entityNativeProjTotal = 0;
+                let entityNativeActTotal = 0;
+                const nativeCurr = getNativeEntityCurrency(key);
+
                 if (currencies.length === 0) {
                     const emptyRow = document.createElement('tr');
                     emptyRow.className = 'sub-curr-row';
                     emptyRow.innerHTML = `
-                        <td>${targetGrandCurr}</td>
-                        <td class="num-col">0.00 ${targetGrandCurr}</td>
-                        <td class="num-col">0.00 ${targetGrandCurr}</td>
-                        <td class="num-col">0.00 ${targetGrandCurr}</td>
+                        <td>${nativeCurr}</td>
+                        <td class="num-col">0.00 ${nativeCurr}</td>
+                        <td class="num-col">0.00 ${nativeCurr}</td>
+                        <td class="num-col">0.00 ${nativeCurr}</td>
                         <td class="num-col">0.0%</td>
                         <td style="text-align: center;"><span class="status-badge status-nobudget">NO BUDGET</span></td>
                     `;
@@ -870,6 +868,9 @@
                         const subAct = catObj.byCurr[curr].actual;
                         const subDiff = subProj - subAct;
                         const subBadge = getStatusBadge(subProj, subAct);
+
+                        entityNativeProjTotal += convertLocalToNativeEntityCurrency(subProj, curr, key);
+                        entityNativeActTotal += convertLocalToNativeEntityCurrency(subAct, curr, key);
 
                         const subRow = document.createElement('tr');
                         subRow.className = 'sub-curr-row';
@@ -885,22 +886,43 @@
                         `;
                         tbody.appendChild(subRow);
                     });
+
+                    // Add Entity Sub-Total Row when grouped by Entity
+                    if (groupBy === "Entity") {
+                        const entityDiff = entityNativeProjTotal - entityNativeActTotal;
+                        const entityBadge = getStatusBadge(entityNativeProjTotal, entityNativeActTotal);
+
+                        const entityTotalRow = document.createElement('tr');
+                        entityTotalRow.className = 'entity-total-row';
+                        entityTotalRow.innerHTML = `
+                            <td>${key} Total (${nativeCurr})</td>
+                            <td class="num-col">${formatCurrency(entityNativeProjTotal, nativeCurr)}</td>
+                            <td class="num-col">${formatCurrency(entityNativeActTotal, nativeCurr)}</td>
+                            <td class="num-col">${formatCurrency(Math.abs(entityDiff), nativeCurr)}</td>
+                            <td class="num-col">${formatPercent(entityNativeProjTotal, entityNativeActTotal)}</td>
+                            <td style="text-align: center;">
+                                <span class="status-badge ${entityBadge.cssClass}">${entityBadge.text}</span>
+                            </td>
+                        `;
+                        tbody.appendChild(entityTotalRow);
+                    }
                 }
             }
         });
 
-        const totalDiffDisp = totalProjConverted - totalActConverted;
-        const totalBadge = getStatusBadge(totalProjConverted, totalActConverted);
+        // Grand Total Row in SAR matching Google Sheet SAR columns
+        const totalDiffSAR = grandProjSAR - grandActSAR;
+        const totalBadgeSAR = getStatusBadge(grandProjSAR, grandActSAR);
 
         tfoot.innerHTML = `
             <tr>
-                <td>TOTAL (${targetGrandCurr})</td>
-                <td class="num-col">${formatCurrency(totalProjConverted, targetGrandCurr)}</td>
-                <td class="num-col">${formatCurrency(totalActConverted, targetGrandCurr)}</td>
-                <td class="num-col">${formatCurrency(Math.abs(totalDiffDisp), targetGrandCurr)}</td>
-                <td class="num-col">${formatPercent(totalProjConverted, totalActConverted)}</td>
+                <td>TOTAL (SAR)</td>
+                <td class="num-col">${formatCurrency(grandProjSAR, "SAR")}</td>
+                <td class="num-col">${formatCurrency(grandActSAR, "SAR")}</td>
+                <td class="num-col">${formatCurrency(Math.abs(totalDiffSAR), "SAR")}</td>
+                <td class="num-col">${formatPercent(grandProjSAR, grandActSAR)}</td>
                 <td style="text-align: center;">
-                    <span class="status-badge ${totalBadge.cssClass}">${totalBadge.text}</span>
+                    <span class="status-badge ${totalBadgeSAR.cssClass}">${totalBadgeSAR.text}</span>
                 </td>
             </tr>
         `;
