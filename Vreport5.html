@@ -49,42 +49,22 @@
             z-index: 100;
         }
 
+        /* BRANDING AREA FOR OFFICIAL LOGO */
         .sidebar-brand {
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 12px;
-            padding-bottom: 24px;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 24px;
+            width: 100%;
         }
 
         .sidebar-logo-img {
-            max-height: 38px;
-            width: auto;
+            max-height: 52px;
+            width: 100%;
             object-fit: contain;
-        }
-
-        .logo-text-wrapper {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo-arabic {
-            font-size: 20px;
-            font-weight: 800;
-            color: #ffffff;
-            line-height: 1;
-        }
-
-        .logo-english {
-            font-size: 16px;
-            font-weight: 800;
-            color: #ffffff;
-            line-height: 1;
-        }
-
-        .logo-accent {
-            color: var(--almosafer-teal);
+            mix-blend-mode: screen; /* Seamlessly blends logo background into Almosafer Navy */
         }
 
         .sidebar-menu-title {
@@ -223,7 +203,6 @@
             border-color: var(--almosafer-teal);
         }
 
-        /* SMALL COMPACT RESET BUTTON */
         .btn-reset {
             padding: 7px 12px;
             border-radius: 6px;
@@ -394,21 +373,9 @@
 <body>
 
 <aside class="sidebar">
+    <!-- Clean, Prominent Official Almosafer Logo -->
     <div class="sidebar-brand">
-        <!-- Attempts to load uploaded logo.png; falls back cleanly to SVG if file is missing -->
-        <img src="logo.png" alt="Almosafer" class="sidebar-logo-img" onerror="this.style.display='none'; document.getElementById('svg-fallback-logo').style.display='flex';" />
-        
-        <div id="svg-fallback-logo" style="display: flex; align-items: center; gap: 12px;">
-            <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="25" y="30" width="50" height="45" rx="6" fill="#00A8B5"/>
-                <path d="M40 30 V20 Q40 15 45 15 H55 Q60 15 60 20 V30" stroke="#ffffff" stroke-width="6" fill="none"/>
-                <path d="M25 50 H75" stroke="#E63946" stroke-width="6"/>
-            </svg>
-            <div class="logo-text-wrapper">
-                <div class="logo-arabic">المـســافـر</div>
-                <div class="logo-english">Alm<span class="logo-accent">o</span>safer</div>
-            </div>
-        </div>
+        <img src="logo.png" alt="Almosafer Logo" class="sidebar-logo-img" />
     </div>
 
     <div class="sidebar-menu-title">Finance Modules</div>
@@ -863,7 +830,6 @@
 
         tbody.innerHTML = '';
 
-        // Determine Grand Total currency
         let targetGrandCurr = "SAR";
         if (currMode === "Local" && selEntity !== "All") {
             targetGrandCurr = getNativeEntityCurrency(selEntity);
@@ -874,11 +840,9 @@
 
         filteredRaw.forEach(item => {
             if (currMode === "SAR" || selEntity === "All") {
-                // Always pull Google Sheet pre-converted SAR columns for 100% SAR consistency
                 if (item.type === 'projection') grandProjConverted += Number(item.sarAmt || 0);
                 if (item.type === 'actual') grandActConverted += Number(item.sarAmt || 0);
             } else {
-                // When filtering by a single entity (Emirates / Kuwait), convert to target native currency
                 if (item.type === 'projection') grandProjConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
                 if (item.type === 'actual') grandActConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
             }
