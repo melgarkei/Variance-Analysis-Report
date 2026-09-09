@@ -231,7 +231,6 @@
             margin-bottom: 36px;
         }
 
-        /* LOWER CURRENCY BAR */
         .lower-currency-bar {
             display: flex;
             justify-content: space-between;
@@ -259,17 +258,30 @@
         }
 
         td {
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-primary);
         }
 
-        tfoot td {
+        .cat-header-row td {
             font-weight: 700;
+            background-color: #f1f5f9;
+            color: var(--almosafer-navy);
+            border-top: 1px solid #cbd5e1;
+        }
+
+        .sub-curr-row td {
+            padding-left: 32px;
+            font-size: 13px;
+        }
+
+        tfoot td {
+            font-weight: 800;
             background-color: #f8fafc;
             border-top: 2px solid var(--almosafer-navy);
             border-bottom: none;
             color: var(--almosafer-navy);
+            font-size: 15px;
         }
 
         .num-col {
@@ -377,7 +389,7 @@
                 <div class="brand-title-badge">FY 2026 Reporting</div>
             </div>
 
-            <!-- UPPER CONTROLS (WITHOUT CURRENCY VIEW) -->
+            <!-- UPPER CONTROLS -->
             <div class="controls-container">
                 <div class="control-group">
                     <label for="monthSelect">Month</label>
@@ -431,7 +443,7 @@
                     <label for="currencyMode" style="margin: 0;">Currency View:</label>
                     <select id="currencyMode" onchange="updateDashboard()">
                         <option value="SAR" selected>SAR Amount (Converted)</option>
-                        <option value="Local">Original Sheet Currency (Local)</option>
+                        <option value="Local">Local Currency</option>
                     </select>
                 </div>
             </div>
@@ -482,7 +494,6 @@
     const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxiJnoD94slP5JudYwsg1vhpo6YpGc6E4240hUXoTGWbFjMY6WhERXuUcDPbTl4F4RA3Q/exec";
 
     const MASTER_CATEGORIES = [
-        "Trade - Amex",
         "Trade - VCC",
         "Customer Refunds",
         "Trade - Non Air",
@@ -492,6 +503,30 @@
         "Trade Air - GSA",
         "Trade Air - LCC"
     ];
+
+    // Exact conversion table to AED matching user sheet matrix
+    const FX_RATES_TO_AED = {
+        'AED': 1,
+        'AUD': 2.319702198,
+        'BHD': 9.737820516,
+        'EGP': 0.2254,
+        'EUR': 3.990233444,
+        'GBP': 4.649079825,
+        'INR': 0.04993030791,
+        'JOD': 5.181853393,
+        'KWD': 0.6065624588,
+        'MYR': 1.083183491,
+        'NGN': 0.008863577259,
+        'OMR': 9.535724005,
+        'PHP': 0.07624145343,
+        'PKR': 0.02286812637,
+        'QAR': 1,
+        'SAR': 0.9714,
+        'TRY': 0.4364557918,
+        'TND': 1.2745127,
+        'USD': 3.674,
+        'CHF': 4.23371
+    };
 
     function switchTab(sectionId, element) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -511,14 +546,10 @@
         return null;
     }
 
-    // Filter out #N/A, Unknown, and empty values from Entity dropdown
     function isValidEntity(entityStr) {
         if (!entityStr) return false;
         const clean = String(entityStr).trim().toLowerCase();
-        if (clean === "" || clean === "unknown" || clean === "#n/a" || clean === "n/a" || clean === "null" || clean === "undefined") {
-            return false;
-        }
-        return true;
+        return !(clean === "" || clean === "unknown" || clean === "#n/a" || clean === "n/a" || clean === "null" || clean === "undefined");
     }
 
     function cleanMonthString(val) {
@@ -608,15 +639,14 @@
         });
     }
 
-    // Auto switch Currency mode when Country is selected vs All Entities
     function handleEntityChange() {
         const selEntity = document.getElementById('entitySelect').value;
         const currSelect = document.getElementById('currencyMode');
         
         if (selEntity !== "All") {
-            currSelect.value = "Local"; // Auto-switch to Native Currency for country view
+            currSelect.value = "Local";
         } else {
-            currSelect.value = "SAR";   // Auto-switch to SAR for global view
+            currSelect.value = "SAR";
         }
         updateDashboard();
     }
@@ -642,6 +672,13 @@
         } else {
             return { text: 'WITHIN BUDGET', cssClass: 'status-within' };
         }
+    }
+
+    function convertToAED(amount, currency) {
+        if (!amount) return 0;
+        const curr = String(currency || "SAR").toUpperCase().trim();
+        const rate = FX_RATES_TO_AED[curr] !== undefined ? FX_RATES_TO_AED[curr] : 1;
+        return amount * rate;
     }
 
     function updateDashboard() {
@@ -670,7 +707,7 @@
 
         if (groupBy === "Category") {
             MASTER_CATEGORIES.forEach(cat => {
-                aggregated[cat] = { projected: 0, actual: 0, currencies: new Set() };
+                aggregated[cat] = { projected: 0, actual: 0, byCurr: {} };
             });
         }
 
@@ -678,21 +715,23 @@
             const key = groupBy === "Category" ? item.category : item.entity;
 
             if (!aggregated[key]) {
-                aggregated[key] = { 
-                    projected: 0, 
-                    actual: 0, 
-                    currencies: new Set()
-                };
+                aggregated[key] = { projected: 0, actual: 0, byCurr: {} };
             }
 
-            const amount = (currMode === "SAR") ? Number(item.sarAmt || 0) : Number(item.localAmt || 0);
+            const curr = String(item.currency || "SAR").toUpperCase().trim();
+            if (!aggregated[key].byCurr[curr]) {
+                aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
+            }
 
-            if (item.currency) aggregated[key].currencies.add(item.currency);
+            const sarAmt = Number(item.sarAmt || 0);
+            const localAmt = Number(item.localAmt || 0);
 
             if (item.type === 'projection') {
-                aggregated[key].projected += amount;
+                aggregated[key].projected += (currMode === "SAR") ? sarAmt : localAmt;
+                aggregated[key].byCurr[curr].projected += localAmt;
             } else if (item.type === 'actual') {
-                aggregated[key].actual += amount;
+                aggregated[key].actual += (currMode === "SAR") ? sarAmt : localAmt;
+                aggregated[key].byCurr[curr].actual += localAmt;
             }
         });
 
@@ -701,7 +740,7 @@
         const actualData = labels.map(l => aggregated[l].actual);
 
         renderChart(labels, projectedData, actualData, currMode);
-        renderTable(aggregated, groupBy, currMode);
+        renderTable(aggregated, filtered, groupBy, currMode);
     }
 
     function renderChart(labels, projectedData, actualData, currMode) {
@@ -735,13 +774,13 @@
         });
     }
 
-    function renderTable(aggregatedData, groupBy, currMode) {
+    function renderTable(aggregatedData, filteredRaw, groupBy, currMode) {
         const headerRow = document.getElementById('tableHeader');
         const tbody = document.getElementById('tableBody');
         const tfoot = document.getElementById('tableFooter');
 
         headerRow.innerHTML = `
-            <th>${groupBy === "Category" ? "Category" : "Entity"}</th>
+            <th>${groupBy === "Category" ? "Category / Currency" : "Entity / Currency"}</th>
             <th class="num-col">Projected Amount</th>
             <th class="num-col">Actual Amount</th>
             <th class="num-col">Difference</th>
@@ -751,51 +790,99 @@
 
         tbody.innerHTML = '';
 
-        let totalProj = 0;
-        let totalAct = 0;
+        let totalProjAED = 0;
+        let totalActAED = 0;
 
-        Object.keys(aggregatedData).forEach(key => {
-            const proj = aggregatedData[key].projected;
-            const act = aggregatedData[key].actual;
-            const currList = Array.from(aggregatedData[key].currencies);
-            const curr = (currMode === "SAR") ? "SAR" : (currList.length === 1 ? currList[0] : (currList[0] || "Local"));
-            const diff = proj - act;
-
-            totalProj += proj;
-            totalAct += act;
-
-            const badge = getStatusBadge(proj, act);
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${key}</td>
-                <td class="num-col">${formatCurrency(proj, curr)}</td>
-                <td class="num-col">${formatCurrency(act, curr)}</td>
-                <td class="num-col">${formatCurrency(Math.abs(diff), curr)}</td>
-                <td class="num-col">${formatPercent(proj, act)}</td>
-                <td style="text-align: center;">
-                    <span class="status-badge ${badge.cssClass}">
-                        ${badge.text}
-                    </span>
-                </td>
-            `;
-            tbody.appendChild(row);
+        filteredRaw.forEach(item => {
+            if (item.type === 'projection') {
+                totalProjAED += convertToAED(item.localAmt, item.currency);
+            } else if (item.type === 'actual') {
+                totalActAED += convertToAED(item.localAmt, item.currency);
+            }
         });
 
-        const totalDiff = totalProj - totalAct;
-        const totalBadge = getStatusBadge(totalProj, totalAct);
+        Object.keys(aggregatedData).forEach(key => {
+            const catObj = aggregatedData[key];
+            const proj = catObj.projected;
+            const act = catObj.actual;
+            const diff = proj - act;
+
+            if (currMode === "SAR") {
+                const badge = getStatusBadge(proj, act);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><b>${key}</b></td>
+                    <td class="num-col">${formatCurrency(proj, "SAR")}</td>
+                    <td class="num-col">${formatCurrency(act, "SAR")}</td>
+                    <td class="num-col">${formatCurrency(Math.abs(diff), "SAR")}</td>
+                    <td class="num-col">${formatPercent(proj, act)}</td>
+                    <td style="text-align: center;">
+                        <span class="status-badge ${badge.cssClass}">${badge.text}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            } else {
+                const catHeaderRow = document.createElement('tr');
+                catHeaderRow.className = 'cat-header-row';
+                catHeaderRow.innerHTML = `
+                    <td colspan="6"><b>${key}</b></td>
+                `;
+                tbody.appendChild(catHeaderRow);
+
+                const currencies = Object.keys(catObj.byCurr);
+                if (currencies.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.className = 'sub-curr-row';
+                    emptyRow.innerHTML = `
+                        <td>AED</td>
+                        <td class="num-col">0.00 AED</td>
+                        <td class="num-col">0.00 AED</td>
+                        <td class="num-col">0.00 AED</td>
+                        <td class="num-col">0.0%</td>
+                        <td style="text-align: center;"><span class="status-badge status-nobudget">NO BUDGET</span></td>
+                    `;
+                    tbody.appendChild(emptyRow);
+                } else {
+                    currencies.forEach(curr => {
+                        const subProj = catObj.byCurr[curr].projected;
+                        const subAct = catObj.byCurr[curr].actual;
+                        const subDiff = subProj - subAct;
+                        const subBadge = getStatusBadge(subProj, subAct);
+
+                        const subRow = document.createElement('tr');
+                        subRow.className = 'sub-curr-row';
+                        subRow.innerHTML = `
+                            <td>${curr}</td>
+                            <td class="num-col">${formatCurrency(subProj, curr)}</td>
+                            <td class="num-col">${formatCurrency(subAct, curr)}</td>
+                            <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
+                            <td class="num-col">${formatPercent(subProj, subAct)}</td>
+                            <td style="text-align: center;">
+                                <span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span>
+                            </td>
+                        `;
+                        tbody.appendChild(subRow);
+                    });
+                }
+            }
+        });
+
+        const displayTotalCurr = (currMode === "SAR") ? "SAR" : "AED";
+        const totalProjDisp = (currMode === "SAR") ? filteredRaw.filter(r => r.type === 'projection').reduce((s, x) => s + x.sarAmt, 0) : totalProjAED;
+        const totalActDisp = (currMode === "SAR") ? filteredRaw.filter(r => r.type === 'actual').reduce((s, x) => s + x.sarAmt, 0) : totalActAED;
+        
+        const totalDiffDisp = totalProjDisp - totalActDisp;
+        const totalBadge = getStatusBadge(totalProjDisp, totalActDisp);
 
         tfoot.innerHTML = `
             <tr>
-                <td>TOTAL</td>
-                <td class="num-col">${formatCurrency(totalProj, currMode === "SAR" ? "SAR" : "Mixed")}</td>
-                <td class="num-col">${formatCurrency(totalAct, currMode === "SAR" ? "SAR" : "Mixed")}</td>
-                <td class="num-col">${formatCurrency(Math.abs(totalDiff), currMode === "SAR" ? "SAR" : "Mixed")}</td>
-                <td class="num-col">${formatPercent(totalProj, totalAct)}</td>
+                <td>TOTAL (${displayTotalCurr})</td>
+                <td class="num-col">${formatCurrency(totalProjDisp, displayTotalCurr)}</td>
+                <td class="num-col">${formatCurrency(totalActDisp, displayTotalCurr)}</td>
+                <td class="num-col">${formatCurrency(Math.abs(totalDiffDisp), displayTotalCurr)}</td>
+                <td class="num-col">${formatPercent(totalProjDisp, totalActDisp)}</td>
                 <td style="text-align: center;">
-                    <span class="status-badge ${totalBadge.cssClass}">
-                        ${totalBadge.text}
-                    </span>
+                    <span class="status-badge ${totalBadge.cssClass}">${totalBadge.text}</span>
                 </td>
             </tr>
         `;
