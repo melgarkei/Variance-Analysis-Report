@@ -463,7 +463,7 @@
 
 <main class="main-wrapper">
 
-    <!-- VARIANCE SECTION -->
+    <!-- VARIANCE ANALYSIS REPORT (PHASE 1) -->
     <div id="variance-section" class="tab-content active">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -546,7 +546,7 @@
         </div>
     </div>
 
-    <!-- PROJECTION SECTION (SAMPLE PIVOT LAYOUT) -->
+    <!-- PROJECTION DASHBOARD (PHASE 2) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -554,7 +554,6 @@
                 <div class="brand-title-badge">Copy of Monthly Projection 2026</div>
             </div>
 
-            <!-- PROJECTION FILTERS WITH MULTI-WEEK FILTER -->
             <div class="controls-container">
                 <div class="control-group">
                     <label>Filter Weeks (Multi-Select)</label>
@@ -594,7 +593,6 @@
                 </button>
             </div>
 
-            <!-- 2x2 GRID MATCHING YOUR REFERENCE SAMPLE -->
             <div class="grid-2x2">
                 <!-- Table 1: Category vs Entity (SAR) -->
                 <div class="pivot-card">
@@ -622,7 +620,7 @@
                 <!-- Table 2: Currency vs Entity (Projected Amt) -->
                 <div class="pivot-card">
                     <div class="pivot-title">
-                        <span>Sum of Projected Amount (Original Curr)</span>
+                        <span>Sum of Projected Amount</span>
                         <span style="font-size: 11px; color: var(--text-secondary);">Column Labels: Entity</span>
                     </div>
                     <table>
@@ -683,7 +681,7 @@
         </div>
     </div>
 
-    <!-- DAILY PAYMENT SECTION -->
+    <!-- DAILY PAYMENT TRACKER -->
     <div id="daily-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -749,8 +747,9 @@
     }
 
     function cleanMonthString(val) {
-        if (!val || val === "Unknown") return "";
+        if (!val || val === "Unknown" || val === "true" || val === "false") return "";
         const str = String(val).trim();
+        if (str.indexOf("Week") !== -1) return "";
         if (str.length > 20 && str.indexOf("GMT") !== -1) {
             const d = new Date(str);
             if (!isNaN(d.getTime())) {
@@ -794,13 +793,16 @@
     }
 
     function populateFilters() {
-        populateDropdown('monthSelect', rawData.map(d => d.month), false);
-        populateDropdown('weekSelect', rawData.map(d => d.week), true);
-        populateDropdown('entitySelect', rawData.map(d => d.entity), false);
+        const phase1Data = rawData.filter(d => d.source === 'phase1' || d.source === 'both' || !d.source);
+
+        populateDropdown('monthSelect', phase1Data.map(d => d.month).filter(m => m && !m.includes("Week")), false);
+        populateDropdown('weekSelect', phase1Data.map(d => d.week).filter(w => w && w !== "true"), true);
+        populateDropdown('entitySelect', phase1Data.map(d => d.entity), false);
         populateDropdown('categorySelect', MASTER_CATEGORIES, false);
 
-        populateDropdown('projMonthSelect', rawData.map(d => d.month), false);
-        populateDropdown('projEntitySelect', rawData.map(d => d.entity), false);
+        const phase2Data = rawData.filter(d => d.source === 'both');
+        populateDropdown('projMonthSelect', phase2Data.map(d => d.month).filter(m => m && !m.includes("Week")), false);
+        populateDropdown('projEntitySelect', phase2Data.map(d => d.entity), false);
     }
 
     function populateDropdown(id, list, isWeek) {
@@ -823,10 +825,10 @@
         });
     }
 
-    // MULTI-SELECT WEEK DROPDOWN LOGIC FOR PROJECTION
     function populateProjectionWeekDropdown() {
         const container = document.getElementById('projWeekOptions');
-        const weeks = [...new Set(rawData.map(d => d.normalizedWeek || d.week))].filter(Boolean);
+        const projData = rawData.filter(d => d.source === 'both');
+        const weeks = [...new Set(projData.map(d => d.normalizedWeek || d.week))].filter(Boolean);
         weeks.sort((a, b) => (parseInt(a.match(/\d+/) || 0) - parseInt(b.match(/\d+/) || 0)));
 
         container.innerHTML = '';
@@ -883,7 +885,7 @@
         const selectedEntity = document.getElementById('projEntitySelect').value;
         const selectedWeeks = Array.from(document.querySelectorAll('.proj-week-cb:checked')).map(cb => cb.value);
 
-        const projData = rawData.filter(d => d.type === 'projection' &&
+        const projData = rawData.filter(d => (d.source === 'both' || d.type === 'projection') &&
             (selectedMonth === "All" || d.month === selectedMonth) &&
             (selectedEntity === "All" || d.entity === selectedEntity) &&
             (selectedWeeks.includes(d.normalizedWeek) || selectedWeeks.includes(d.week))
@@ -895,14 +897,11 @@
         renderPivotTable4(projData);
     }
 
-    // Table 1: Category vs Entity (Sum of SAR Amt)
     function renderPivotTable1(data) {
         const tbody = document.getElementById('pTable1Body');
         const tfoot = document.getElementById('pTable1Foot');
-
-        const entities = ["Saudia", "Emirates", "Kuwait"];
-        const matrix = {};
         const colTotals = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
+        const matrix = {};
 
         MASTER_CATEGORIES.forEach(cat => {
             matrix[cat] = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
@@ -923,15 +922,14 @@
 
         tbody.innerHTML = '';
         MASTER_CATEGORIES.forEach(cat => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><b>${cat}</b></td>
-                <td class="num-col">${formatNumber(matrix[cat].Saudia)}</td>
-                <td class="num-col">${formatNumber(matrix[cat].Emirates)}</td>
-                <td class="num-col">${formatNumber(matrix[cat].Kuwait)}</td>
-                <td class="num-col"><b>${formatNumber(matrix[cat].Total)}</b></td>
-            `;
-            tbody.appendChild(row);
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${cat}</b></td>
+                    <td class="num-col">${formatNumber(matrix[cat].Saudia)}</td>
+                    <td class="num-col">${formatNumber(matrix[cat].Emirates)}</td>
+                    <td class="num-col">${formatNumber(matrix[cat].Kuwait)}</td>
+                    <td class="num-col"><b>${formatNumber(matrix[cat].Total)}</b></td>
+                </tr>`;
         });
 
         tfoot.innerHTML = `
@@ -941,22 +939,17 @@
                 <td class="num-col">${formatNumber(colTotals.Emirates)}</td>
                 <td class="num-col">${formatNumber(colTotals.Kuwait)}</td>
                 <td class="num-col">${formatNumber(colTotals.Total)}</td>
-            </tr>
-        `;
+            </tr>`;
     }
 
-    // Table 2: Currency vs Entity (Sum of Projected Amount)
     function renderPivotTable2(data) {
         const tbody = document.getElementById('pTable2Body');
         const tfoot = document.getElementById('pTable2Foot');
-
         const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
         const matrix = {};
         const colTotals = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
 
-        currencies.forEach(curr => {
-            matrix[curr] = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
-        });
+        currencies.forEach(curr => matrix[curr] = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 });
 
         data.forEach(d => {
             const curr = String(d.currency || "SAR").toUpperCase();
@@ -973,15 +966,14 @@
 
         tbody.innerHTML = '';
         currencies.forEach(curr => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><b>${curr}</b></td>
-                <td class="num-col">${formatNumber(matrix[curr].Saudia)}</td>
-                <td class="num-col">${formatNumber(matrix[curr].Emirates)}</td>
-                <td class="num-col">${formatNumber(matrix[curr].Kuwait)}</td>
-                <td class="num-col"><b>${formatNumber(matrix[curr].Total)}</b></td>
-            `;
-            tbody.appendChild(row);
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${curr}</b></td>
+                    <td class="num-col">${formatNumber(matrix[curr].Saudia)}</td>
+                    <td class="num-col">${formatNumber(matrix[curr].Emirates)}</td>
+                    <td class="num-col">${formatNumber(matrix[curr].Kuwait)}</td>
+                    <td class="num-col"><b>${formatNumber(matrix[curr].Total)}</b></td>
+                </tr>`;
         });
 
         tfoot.innerHTML = `
@@ -991,15 +983,12 @@
                 <td class="num-col">${formatNumber(colTotals.Emirates)}</td>
                 <td class="num-col">${formatNumber(colTotals.Kuwait)}</td>
                 <td class="num-col">${formatNumber(colTotals.Total)}</td>
-            </tr>
-        `;
+            </tr>`;
     }
 
-    // Table 3: Owner vs SAR Amt
     function renderPivotTable3(data) {
         const tbody = document.getElementById('pTable3Body');
         const tfoot = document.getElementById('pTable3Foot');
-
         const ownerTotals = {};
         let grandTotal = 0;
 
@@ -1014,23 +1003,20 @@
 
         tbody.innerHTML = '';
         Object.keys(ownerTotals).sort().forEach(owner => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><b>${owner}</b></td>
-                <td class="num-col">${formatNumber(ownerTotals[owner])}</td>
-            `;
-            tbody.appendChild(row);
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${owner}</b></td>
+                    <td class="num-col">${formatNumber(ownerTotals[owner])}</td>
+                </tr>`;
         });
 
         tfoot.innerHTML = `
             <tr class="grand-total-row">
                 <td>Grand Total</td>
                 <td class="num-col">${formatNumber(grandTotal)}</td>
-            </tr>
-        `;
+            </tr>`;
     }
 
-    // Table 4: Owner vs Currency Matrix
     function renderPivotTable4(data) {
         const thead = document.getElementById('pTable4Head');
         const tbody = document.getElementById('pTable4Body');
@@ -1085,7 +1071,7 @@
         tfoot.innerHTML = footHtml;
     }
 
-    // STANDARD VARIANCE ANALYSIS REPORT LOGIC
+    /* VARIANCE REPORT DASHBOARD RENDERER (PHASE 1) */
     function handleEntityChange() {
         const selEntity = document.getElementById('entitySelect').value;
         const currSelect = document.getElementById('currencyMode');
@@ -1152,12 +1138,14 @@
         const selWeekKey = (selWeek !== "All") ? getWeekKey(selWeek) : "All";
 
         const filtered = rawData.filter(d => {
+            const isPhase1Record = d.source === 'phase1' || d.source === 'both' || !d.source;
             const matchMonth = (selMonth === "All" || d.month === selMonth);
             const matchWeek = (selWeek === "All" || d.week === selWeek || d.normalizedWeek === selWeekKey);
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
             const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
-            return matchMonth && matchWeek && matchEntity && matchCat && isValidCat;
+            
+            return isPhase1Record && matchMonth && matchWeek && matchEntity && matchCat && isValidCat;
         });
 
         const aggregated = {};
@@ -1280,7 +1268,6 @@
             </tr>`;
     }
 
-    // Close dropdown on outside click
     window.onclick = function(event) {
         if (!event.target.closest('.multi-select-container')) {
             document.getElementById('projWeekDropdown').classList.remove('show');
