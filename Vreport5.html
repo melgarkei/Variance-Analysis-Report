@@ -670,13 +670,16 @@
 
     function getWeekKey(weekStr) {
         if (!weekStr) return "";
-        const m = String(weekStr).match(/Week\s*(\d+)/i) || String(weekStr).match(/^(\d+)$/);
-        return m ? "Week " + m[1] : String(weekStr).trim();
+        // Extracts 'Week 36' from 'Week 36: 06 Sep – 12 Sep 2026'
+        const m = String(weekStr).match(/Week\s*(\d+)/i);
+        if (m) return "Week " + m[1];
+        const numOnly = String(weekStr).match(/^(\d+)$/);
+        return numOnly ? "Week " + numOnly[1] : String(weekStr).trim();
     }
 
     function populateFilters() {
         populateDropdown('monthSelect', rawData.map(d => d.month), false);
-        populateDropdown('weekSelect', rawData.map(d => d.week), true);
+        populateDropdown('weekSelect', rawData.map(d => getWeekKey(d.week)), true);
         populateDropdown('entitySelect', rawData.map(d => d.entity), false);
         populateDropdown('categorySelect', MASTER_CATEGORIES, false);
     }
@@ -765,10 +768,11 @@
         const currMode = document.getElementById('currencyMode').value;
         const groupBy = document.getElementById('groupSelect').value;
 
-        // FIXED FILTER LOGIC: Ignores week filter mismatch for Projections when "All Weeks" is selected
+        const selWeekKey = (selWeek !== "All") ? getWeekKey(selWeek) : "All";
+
         const filtered = rawData.filter(d => {
             const matchMonth = (selMonth === "All" || d.month === selMonth);
-            const matchWeek = (selWeek === "All") ? true : (d.week === selWeek || d.normalizedWeek === getWeekKey(selWeek));
+            const matchWeek = (selWeek === "All") ? true : (d.normalizedWeek === selWeekKey || d.week === selWeek);
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
             const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
