@@ -58,6 +58,17 @@
             margin-bottom: 24px;
         }
 
+        .sidebar-logo-img {
+            max-height: 38px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-text-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
         .logo-arabic {
             font-size: 20px;
             font-weight: 800;
@@ -171,10 +182,10 @@
 
         .controls-container {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             background-color: #f8fafc;
             border: 1px solid var(--border-color);
-            padding: 18px;
+            padding: 16px;
             border-radius: 8px;
             margin-bottom: 28px;
             align-items: flex-end;
@@ -196,15 +207,15 @@
         }
 
         select {
-            padding: 9px 12px;
+            padding: 8px 10px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
             background-color: #ffffff;
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-primary);
             outline: none;
             cursor: pointer;
-            min-width: 140px;
+            min-width: 130px;
             transition: border-color 0.2s ease;
         }
 
@@ -212,26 +223,29 @@
             border-color: var(--almosafer-teal);
         }
 
+        /* SMALL COMPACT RESET BUTTON */
         .btn-reset {
-            padding: 9px 16px;
+            padding: 7px 12px;
             border-radius: 6px;
-            border: 1px solid var(--almosafer-coral);
-            background-color: #fdf2f2;
-            color: var(--almosafer-coral);
-            font-size: 12px;
-            font-weight: 700;
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
+            height: 33px;
         }
 
         .btn-reset:hover {
-            background-color: var(--almosafer-coral);
-            color: #ffffff;
+            border-color: var(--almosafer-coral);
+            color: var(--almosafer-coral);
+            background-color: #fdf2f2;
         }
 
         .section-label-container {
@@ -381,14 +395,19 @@
 
 <aside class="sidebar">
     <div class="sidebar-brand">
-        <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="25" y="30" width="50" height="45" rx="6" fill="#00A8B5"/>
-            <path d="M40 30 V20 Q40 15 45 15 H55 Q60 15 60 20 V30" stroke="#ffffff" stroke-width="6" fill="none"/>
-            <path d="M25 50 H75" stroke="#E63946" stroke-width="6"/>
-        </svg>
-        <div>
-            <div class="logo-arabic">المـســافـر</div>
-            <div class="logo-english">Alm<span class="logo-accent">o</span>safer</div>
+        <!-- Attempts to load uploaded logo.png; falls back cleanly to SVG if file is missing -->
+        <img src="logo.png" alt="Almosafer" class="sidebar-logo-img" onerror="this.style.display='none'; document.getElementById('svg-fallback-logo').style.display='flex';" />
+        
+        <div id="svg-fallback-logo" style="display: flex; align-items: center; gap: 12px;">
+            <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="25" y="30" width="50" height="45" rx="6" fill="#00A8B5"/>
+                <path d="M40 30 V20 Q40 15 45 15 H55 Q60 15 60 20 V30" stroke="#ffffff" stroke-width="6" fill="none"/>
+                <path d="M25 50 H75" stroke="#E63946" stroke-width="6"/>
+            </svg>
+            <div class="logo-text-wrapper">
+                <div class="logo-arabic">المـســافـر</div>
+                <div class="logo-english">Alm<span class="logo-accent">o</span>safer</div>
+            </div>
         </div>
     </div>
 
@@ -418,7 +437,6 @@
                 <div class="brand-title-badge">FY 2026 Reporting</div>
             </div>
 
-            <!-- CONTROLS CONTAINER WITH RESET BUTTON -->
             <div class="controls-container">
                 <div class="control-group">
                     <label for="monthSelect">Month</label>
@@ -456,10 +474,9 @@
                     </select>
                 </div>
 
-                <!-- Reset Filters Button -->
                 <button class="btn-reset" onclick="resetAllFilters()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    Reset Filters
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Reset
                 </button>
             </div>
 
@@ -682,7 +699,6 @@
         updateDashboard();
     }
 
-    // Reset All Filters Function
     function resetAllFilters() {
         document.getElementById('monthSelect').value = "All";
         document.getElementById('weekSelect').value = "All";
@@ -847,7 +863,7 @@
 
         tbody.innerHTML = '';
 
-        // Target Grand Total Currency determination
+        // Determine Grand Total currency
         let targetGrandCurr = "SAR";
         if (currMode === "Local" && selEntity !== "All") {
             targetGrandCurr = getNativeEntityCurrency(selEntity);
@@ -857,11 +873,12 @@
         let grandActConverted = 0;
 
         filteredRaw.forEach(item => {
-            if (currMode === "SAR") {
+            if (currMode === "SAR" || selEntity === "All") {
+                // Always pull Google Sheet pre-converted SAR columns for 100% SAR consistency
                 if (item.type === 'projection') grandProjConverted += Number(item.sarAmt || 0);
                 if (item.type === 'actual') grandActConverted += Number(item.sarAmt || 0);
             } else {
-                // In local mode, convert to selected country native currency (AED for Emirates, KWD for Kuwait)
+                // When filtering by a single entity (Emirates / Kuwait), convert to target native currency
                 if (item.type === 'projection') grandProjConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
                 if (item.type === 'actual') grandActConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
             }
