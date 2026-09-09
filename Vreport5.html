@@ -389,7 +389,6 @@
                 <div class="brand-title-badge">FY 2026 Reporting</div>
             </div>
 
-            <!-- UPPER CONTROLS -->
             <div class="controls-container">
                 <div class="control-group">
                     <label for="monthSelect">Month</label>
@@ -428,7 +427,6 @@
                 </div>
             </div>
 
-            <!-- CHART VISUAL -->
             <div class="section-label-container">
                 <div class="section-label">Primary Visual: Category Breakdown (Projected vs. Actual)</div>
             </div>
@@ -436,7 +434,6 @@
                 <canvas id="comparisonChart"></canvas>
             </div>
 
-            <!-- LOWER BAR: CURRENCY FILTER -->
             <div class="lower-currency-bar">
                 <div class="section-label">Category Summary Data</div>
                 <div class="control-group" style="flex-direction: row; align-items: center; gap: 10px;">
@@ -448,7 +445,6 @@
                 </div>
             </div>
 
-            <!-- SUMMARY TABLE -->
             <table>
                 <thead>
                     <tr id="tableHeader"></tr>
@@ -504,7 +500,7 @@
         "Trade Air - LCC"
     ];
 
-    // Exact conversion table to AED matching user sheet matrix
+    // Conversion Rates to AED
     const FX_RATES_TO_AED = {
         'AED': 1,
         'AUD': 2.319702198,
@@ -674,11 +670,29 @@
         }
     }
 
-    function convertToAED(amount, currency) {
+    function convertToTargetCurrency(amount, fromCurr, targetCurr) {
         if (!amount) return 0;
-        const curr = String(currency || "SAR").toUpperCase().trim();
-        const rate = FX_RATES_TO_AED[curr] !== undefined ? FX_RATES_TO_AED[curr] : 1;
-        return amount * rate;
+        const from = String(fromCurr || "SAR").toUpperCase().trim();
+        const target = String(targetCurr || "SAR").toUpperCase().trim();
+
+        if (from === target) return amount;
+
+        // Convert to AED first as base, then to target
+        const rateToAED = FX_RATES_TO_AED[from] !== undefined ? FX_RATES_TO_AED[from] : 1;
+        const amountInAED = amount * rateToAED;
+
+        if (target === 'AED') return amountInAED;
+
+        const targetRateToAED = FX_RATES_TO_AED[target] !== undefined ? FX_RATES_TO_AED[target] : 1;
+        return amountInAED / targetRateToAED;
+    }
+
+    function getTargetEntityCurrency(entityStr) {
+        const clean = String(entityStr || "").toLowerCase().trim();
+        if (clean.indexOf("emirates") !== -1 || clean.indexOf("uae") !== -1) return "AED";
+        if (clean.indexOf("kuwait") !== -1) return "KWD";
+        if (clean.indexOf("saudia") !== -1 || clean.indexOf("ksa") !== -1) return "SAR";
+        return "AED"; // Default for All Entities Local View
     }
 
     function updateDashboard() {
@@ -740,7 +754,7 @@
         const actualData = labels.map(l => aggregated[l].actual);
 
         renderChart(labels, projectedData, actualData, currMode);
-        renderTable(aggregated, filtered, groupBy, currMode);
+        renderTable(aggregated, filtered, groupBy, currMode, selEntity);
     }
 
     function renderChart(labels, projectedData, actualData, currMode) {
@@ -774,7 +788,7 @@
         });
     }
 
-    function renderTable(aggregatedData, filteredRaw, groupBy, currMode) {
+    function renderTable(aggregatedData, filteredRaw, groupBy, currMode, activeEntity) {
         const headerRow = document.getElementById('tableHeader');
         const tbody = document.getElementById('tableBody');
         const tfoot = document.getElementById('tableFooter');
@@ -790,14 +804,22 @@
 
         tbody.innerHTML = '';
 
-        let totalProjAED = 0;
-        let totalActAED = 0;
+        // Context-aware target currency for grand total
+        let targetGrandCurr = "SAR";
+        if (currMode === "Local") {
+            targetGrandCurr = getTargetEntityCurrency(activeEntity);
+        }
+
+        let totalProjConverted = 0;
+        let totalActConverted = 0;
 
         filteredRaw.forEach(item => {
-            if (item.type === 'projection') {
-                totalProjAED += convertToAED(item.localAmt, item.currency);
-            } else if (item.type === 'actual') {
-                totalActAED += convertToAED(item.localAmt, item.currency);
+            if (currMode === "SAR") {
+                if (item.type === 'projection') totalProjConverted += item.sarAmt;
+                if (item.type === 'actual') totalActConverted += item.sarAmt;
+            } else {
+                if (item.type === 'projection') totalProjConverted += convertToTargetCurrency(item.localAmt, item.currency, targetGrandCurr);
+                if (item.type === 'actual') totalActConverted += convertToTargetCurrency(item.localAmt, item.currency, targetGrandCurr);
             }
         });
 
@@ -834,10 +856,10 @@
                     const emptyRow = document.createElement('tr');
                     emptyRow.className = 'sub-curr-row';
                     emptyRow.innerHTML = `
-                        <td>AED</td>
-                        <td class="num-col">0.00 AED</td>
-                        <td class="num-col">0.00 AED</td>
-                        <td class="num-col">0.00 AED</td>
+                        <td>${targetGrandCurr}</td>
+                        <td class="num-col">0.00 ${targetGrandCurr}</td>
+                        <td class="num-col">0.00 ${targetGrandCurr}</td>
+                        <td class="num-col">0.00 ${targetGrandCurr}</td>
                         <td class="num-col">0.0%</td>
                         <td style="text-align: center;"><span class="status-badge status-nobudget">NO BUDGET</span></td>
                     `;
@@ -867,20 +889,16 @@
             }
         });
 
-        const displayTotalCurr = (currMode === "SAR") ? "SAR" : "AED";
-        const totalProjDisp = (currMode === "SAR") ? filteredRaw.filter(r => r.type === 'projection').reduce((s, x) => s + x.sarAmt, 0) : totalProjAED;
-        const totalActDisp = (currMode === "SAR") ? filteredRaw.filter(r => r.type === 'actual').reduce((s, x) => s + x.sarAmt, 0) : totalActAED;
-        
-        const totalDiffDisp = totalProjDisp - totalActDisp;
-        const totalBadge = getStatusBadge(totalProjDisp, totalActDisp);
+        const totalDiffDisp = totalProjConverted - totalActConverted;
+        const totalBadge = getStatusBadge(totalProjConverted, totalActConverted);
 
         tfoot.innerHTML = `
             <tr>
-                <td>TOTAL (${displayTotalCurr})</td>
-                <td class="num-col">${formatCurrency(totalProjDisp, displayTotalCurr)}</td>
-                <td class="num-col">${formatCurrency(totalActDisp, displayTotalCurr)}</td>
-                <td class="num-col">${formatCurrency(Math.abs(totalDiffDisp), displayTotalCurr)}</td>
-                <td class="num-col">${formatPercent(totalProjDisp, totalActDisp)}</td>
+                <td>TOTAL (${targetGrandCurr})</td>
+                <td class="num-col">${formatCurrency(totalProjConverted, targetGrandCurr)}</td>
+                <td class="num-col">${formatCurrency(totalActConverted, targetGrandCurr)}</td>
+                <td class="num-col">${formatCurrency(Math.abs(totalDiffDisp), targetGrandCurr)}</td>
+                <td class="num-col">${formatPercent(totalProjConverted, totalActConverted)}</td>
                 <td style="text-align: center;">
                     <span class="status-badge ${totalBadge.cssClass}">${totalBadge.text}</span>
                 </td>
