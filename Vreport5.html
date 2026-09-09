@@ -656,7 +656,7 @@
     }
 
     function cleanMonthString(val) {
-        if (!val || val === "Unknown") return "";
+        if (!val || val === "Unknown" || val === "true" || val === "false") return "";
         const str = String(val).trim();
         if (str.length > 20 && str.indexOf("GMT") !== -1) {
             const d = new Date(str);
