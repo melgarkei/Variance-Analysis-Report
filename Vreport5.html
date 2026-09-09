@@ -49,7 +49,6 @@
             z-index: 100;
         }
 
-        /* ENLARGED BRANDING AREA FOR OFFICIAL LOGO */
         .sidebar-brand {
             display: flex;
             justify-content: center;
@@ -127,8 +126,8 @@
         }
 
         .dashboard-card {
-            max-width: 1150px;
-            margin: 0 auto;
+            max-width: 1250px;
+            margin: 0 auto 30px auto;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -189,7 +188,7 @@
             letter-spacing: 0.5px;
         }
 
-        select {
+        select, input[type="text"] {
             padding: 8px 10px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
@@ -198,7 +197,7 @@
             color: var(--text-primary);
             outline: none;
             cursor: pointer;
-            min-width: 130px;
+            min-width: 140px;
             transition: border-color 0.2s ease;
         }
 
@@ -260,25 +259,61 @@
             margin-bottom: 16px;
         }
 
+        /* GRID FOR PROJECTION PIVOT TABLES */
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2x2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pivot-card {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            overflow-x: auto;
+        }
+
+        .pivot-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--almosafer-navy);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--almosafer-teal);
+            display: flex;
+            justify-content: space-between;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 12px;
             text-align: left;
         }
 
         th {
             font-weight: 700;
             color: var(--almosafer-navy);
-            padding: 12px 16px;
+            padding: 8px 12px;
             border-bottom: 2px solid var(--almosafer-navy);
             background-color: #f8fafc;
+            white-space: nowrap;
         }
 
         td {
-            padding: 12px 16px;
+            padding: 8px 12px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-primary);
+            white-space: nowrap;
         }
 
         .cat-header-row td {
@@ -289,8 +324,8 @@
         }
 
         .sub-curr-row td {
-            padding-left: 32px;
-            font-size: 13px;
+            padding-left: 24px;
+            font-size: 12px;
         }
 
         .entity-total-row td {
@@ -300,13 +335,12 @@
             border-bottom: 2px solid #b2ebf2;
         }
 
-        tfoot td {
+        tfoot td, .grand-total-row td {
             font-weight: 800;
-            background-color: #f8fafc;
+            background-color: #e6f7f9;
             border-top: 2px solid var(--almosafer-navy);
-            border-bottom: none;
             color: var(--almosafer-navy);
-            font-size: 15px;
+            font-size: 13px;
         }
 
         .num-col {
@@ -324,37 +358,13 @@
             letter-spacing: 0.5px;
         }
 
-        .status-over {
-            background-color: #fdf2f2;
-            color: var(--almosafer-coral);
-            border: 1px solid #f8d7da;
-        }
+        .status-over { background-color: #fdf2f2; color: var(--almosafer-coral); border: 1px solid #f8d7da; }
+        .status-within { background-color: #e6f4f1; color: var(--almosafer-green); border: 1px solid #b2dfdb; }
+        .status-nobudget { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+        .status-unbudgeted { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
 
-        .status-within {
-            background-color: #e6f4f1;
-            color: var(--almosafer-green);
-            border: 1px solid #b2dfdb;
-        }
-
-        .status-nobudget {
-            background-color: #f1f5f9;
-            color: #64748b;
-            border: 1px solid #cbd5e1;
-        }
-
-        .status-unbudgeted {
-            background-color: #fff7ed;
-            color: #c2410c;
-            border: 1px solid #ffedd5;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         .placeholder-box {
             text-align: center;
@@ -371,12 +381,64 @@
             color: var(--text-secondary);
             font-weight: 500;
         }
+
+        /* MULTI-SELECT WEEK DROPDOWN */
+        .multi-select-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .multi-select-btn {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+            font-size: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 180px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .multi-select-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 200;
+            padding: 8px;
+        }
+
+        .multi-select-dropdown.show { display: block; }
+
+        .multi-select-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .multi-select-option:hover {
+            background-color: #f1f5f9;
+        }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
-    <!-- Prominent Official Almosafer Logo -->
     <div class="sidebar-brand">
         <img src="logo.png" alt="Almosafer Logo" class="sidebar-logo-img" />
     </div>
@@ -400,10 +462,12 @@
 </aside>
 
 <main class="main-wrapper">
+
+    <!-- VARIANCE SECTION -->
     <div id="variance-section" class="tab-content active">
         <div class="dashboard-card">
             <div class="brand-header">
-                <div class="page-title-text">Variance Analysis Dashboard</div>
+                <div class="page-title-text">Variance Analysis Report</div>
                 <div class="brand-title-badge">FY 2026 Reporting</div>
             </div>
 
@@ -482,19 +546,144 @@
         </div>
     </div>
 
+    <!-- PROJECTION SECTION (SAMPLE PIVOT LAYOUT) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
-                <div class="page-title-text">Projection Module</div>
-                <div class="brand-title-badge">Phase 2</div>
+                <div class="page-title-text">Projection</div>
+                <div class="brand-title-badge">Copy of Monthly Projection 2026</div>
             </div>
-            <div class="placeholder-box">
-                <h3>Projection Functions Coming Soon</h3>
-                <p style="margin-top: 8px;">This module will handle future cash flow projections and budget entries.</p>
+
+            <!-- PROJECTION FILTERS WITH MULTI-WEEK FILTER -->
+            <div class="controls-container">
+                <div class="control-group">
+                    <label>Filter Weeks (Multi-Select)</label>
+                    <div class="multi-select-container">
+                        <div class="multi-select-btn" onclick="toggleWeekDropdown()">
+                            <span id="projWeekLabel">All Weeks Selected</span>
+                            <span style="font-size: 10px;">▼</span>
+                        </div>
+                        <div class="multi-select-dropdown" id="projWeekDropdown">
+                            <div class="multi-select-option">
+                                <input type="checkbox" id="selectAllWeeks" checked onchange="toggleSelectAllWeeks(this)" />
+                                <label for="selectAllWeeks" style="text-transform: none; font-weight: 600;">(Select All)</label>
+                            </div>
+                            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 4px 0;" />
+                            <div id="projWeekOptions"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="projMonthSelect">Month</label>
+                    <select id="projMonthSelect" onchange="updateProjectionDashboard()">
+                        <option value="All">All Months</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="projEntitySelect">Entity</label>
+                    <select id="projEntitySelect" onchange="updateProjectionDashboard()">
+                        <option value="All">All Entities</option>
+                    </select>
+                </div>
+
+                <button class="btn-reset" onclick="resetProjectionFilters()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Reset
+                </button>
             </div>
+
+            <!-- 2x2 GRID MATCHING YOUR REFERENCE SAMPLE -->
+            <div class="grid-2x2">
+                <!-- Table 1: Category vs Entity (SAR) -->
+                <div class="pivot-card">
+                    <div class="pivot-title">
+                        <span>Sum of SAR Amt</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Column Labels: Entity</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Row Labels</th>
+                                <th class="num-col">Saudia</th>
+                                <th class="num-col">Emirates</th>
+                                <th class="num-col">Kuwait</th>
+                                <th class="num-col">Grand Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pTable1Body">
+                            <tr><td colspan="5" class="loading-state">Loading Projection Data...</td></tr>
+                        </tbody>
+                        <tfoot id="pTable1Foot"></tfoot>
+                    </table>
+                </div>
+
+                <!-- Table 2: Currency vs Entity (Projected Amt) -->
+                <div class="pivot-card">
+                    <div class="pivot-title">
+                        <span>Sum of Projected Amount (Original Curr)</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Column Labels: Entity</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Row Labels</th>
+                                <th class="num-col">Saudia</th>
+                                <th class="num-col">Emirates</th>
+                                <th class="num-col">Kuwait</th>
+                                <th class="num-col">Grand Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pTable2Body">
+                            <tr><td colspan="5" class="loading-state">Loading Projection Data...</td></tr>
+                        </tbody>
+                        <tfoot id="pTable2Foot"></tfoot>
+                    </table>
+                </div>
+
+                <!-- Table 3: Owner vs SAR Amt -->
+                <div class="pivot-card">
+                    <div class="pivot-title">
+                        <span>Sum of SAR Amt by Owner</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Row Labels (Owner)</th>
+                                <th class="num-col">Sum of SAR Amt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pTable3Body">
+                            <tr><td colspan="2" class="loading-state">Loading Projection Data...</td></tr>
+                        </tbody>
+                        <tfoot id="pTable3Foot"></tfoot>
+                    </table>
+                </div>
+
+                <!-- Table 4: Owner vs Currency -->
+                <div class="pivot-card">
+                    <div class="pivot-title">
+                        <span>Sum of Projected Amount by Owner & Currency</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="pTable4">
+                            <thead id="pTable4Head">
+                                <tr><th>Row Labels</th></tr>
+                            </thead>
+                            <tbody id="pTable4Body">
+                                <tr><td colspan="1" class="loading-state">Loading...</td></tr>
+                            </tbody>
+                            <tfoot id="pTable4Foot"></tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <!-- DAILY PAYMENT SECTION -->
     <div id="daily-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -507,6 +696,7 @@
             </div>
         </div>
     </div>
+
 </main>
 
 <script>
@@ -524,27 +714,15 @@
     ];
 
     const FX_RATES_TO_AED = {
-        'AED': 1,
-        'AUD': 2.319702198,
-        'BHD': 9.737820516,
-        'EGP': 0.2254,
-        'EUR': 3.990233444,
-        'GBP': 4.649079825,
-        'INR': 0.04993030791,
-        'JOD': 5.181853393,
-        'KWD': 0.6065624588,
-        'MYR': 1.083183491,
-        'NGN': 0.008863577259,
-        'OMR': 9.535724005,
-        'PHP': 0.07624145343,
-        'PKR': 0.02286812637,
-        'QAR': 1,
-        'SAR': 0.9714,
-        'TRY': 0.4364557918,
-        'TND': 1.2745127,
-        'USD': 3.674,
-        'CHF': 4.23371
+        'AED': 1, 'AUD': 2.319702198, 'BHD': 9.737820516, 'EGP': 0.2254, 'EUR': 3.990233444,
+        'GBP': 4.649079825, 'INR': 0.04993030791, 'JOD': 5.181853393, 'KWD': 0.6065624588,
+        'MYR': 1.083183491, 'NGN': 0.008863577259, 'OMR': 9.535724005, 'PHP': 0.07624145343,
+        'PKR': 0.02286812637, 'QAR': 1, 'SAR': 0.9714, 'TRY': 0.4364557918, 'TND': 1.2745127,
+        'USD': 3.674, 'CHF': 4.23371
     };
+
+    let rawData = [];
+    let chartInstance = null;
 
     function switchTab(sectionId, element) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -561,7 +739,7 @@
             const masterClean = master.toLowerCase().replace(/[^a-z0-9]/g, '');
             if (clean === masterClean) return master;
         }
-        return null;
+        return String(catStr).trim();
     }
 
     function isValidEntity(entityStr) {
@@ -589,9 +767,6 @@
         return m ? "Week " + m[1] : String(weekStr).trim();
     }
 
-    let rawData = [];
-    let chartInstance = null;
-
     function fetchLiveGoogleSheetData() {
         window.handleScriptResponse = function(data) {
             if (typeof data === 'string') {
@@ -603,30 +778,18 @@
                 month: cleanMonthString(item.month),
                 category: normalizeCategory(item.category),
                 normalizedWeek: getWeekKey(item.week),
-                entity: isValidEntity(item.entity) ? String(item.entity).trim() : null
+                entity: isValidEntity(item.entity) ? String(item.entity).trim() : "Unknown",
+                owner: item.owner ? String(item.owner).trim() : "Unassigned"
             }));
 
             populateFilters();
+            populateProjectionWeekDropdown();
             updateDashboard();
+            updateProjectionDashboard();
         };
 
         const script = document.createElement('script');
         script.src = `${GOOGLE_SHEET_API_URL}?callback=handleScriptResponse`;
-        
-        script.onerror = function() {
-            fetch(GOOGLE_SHEET_API_URL)
-                .then(res => res.json())
-                .then(data => handleScriptResponse(data))
-                .catch(err => {
-                    document.getElementById('tableBody').innerHTML = `
-                        <tr>
-                            <td colspan="6" class="loading-state" style="color: red;">
-                                Connection Blocked. Please ensure you are logged into your Almosafer Google account in this browser.
-                            </td>
-                        </tr>`;
-                });
-        };
-        
         document.body.appendChild(script);
     }
 
@@ -635,6 +798,9 @@
         populateDropdown('weekSelect', rawData.map(d => d.week), true);
         populateDropdown('entitySelect', rawData.map(d => d.entity), false);
         populateDropdown('categorySelect', MASTER_CATEGORIES, false);
+
+        populateDropdown('projMonthSelect', rawData.map(d => d.month), false);
+        populateDropdown('projEntitySelect', rawData.map(d => d.entity), false);
     }
 
     function populateDropdown(id, list, isWeek) {
@@ -657,15 +823,273 @@
         });
     }
 
+    // MULTI-SELECT WEEK DROPDOWN LOGIC FOR PROJECTION
+    function populateProjectionWeekDropdown() {
+        const container = document.getElementById('projWeekOptions');
+        const weeks = [...new Set(rawData.map(d => d.normalizedWeek || d.week))].filter(Boolean);
+        weeks.sort((a, b) => (parseInt(a.match(/\d+/) || 0) - parseInt(b.match(/\d+/) || 0)));
+
+        container.innerHTML = '';
+        weeks.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'multi-select-option';
+            div.innerHTML = `
+                <input type="checkbox" class="proj-week-cb" value="${w}" id="cb_${w}" checked onchange="onWeekCbChange()" />
+                <label for="cb_${w}" style="text-transform: none;">${w}</label>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function toggleWeekDropdown() {
+        document.getElementById('projWeekDropdown').classList.toggle('show');
+    }
+
+    function toggleSelectAllWeeks(masterCb) {
+        document.querySelectorAll('.proj-week-cb').forEach(cb => cb.checked = masterCb.checked);
+        onWeekCbChange();
+    }
+
+    function onWeekCbChange() {
+        const checked = Array.from(document.querySelectorAll('.proj-week-cb:checked')).map(cb => cb.value);
+        const all = document.querySelectorAll('.proj-week-cb').length;
+        const label = document.getElementById('projWeekLabel');
+
+        if (checked.length === all) {
+            label.textContent = "All Weeks Selected";
+        } else if (checked.length === 0) {
+            label.textContent = "No Weeks Selected";
+        } else {
+            label.textContent = `${checked.length} Weeks Selected`;
+        }
+
+        updateProjectionDashboard();
+    }
+
+    function resetProjectionFilters() {
+        document.getElementById('projMonthSelect').value = "All";
+        document.getElementById('projEntitySelect').value = "All";
+        document.getElementById('selectAllWeeks').checked = true;
+        toggleSelectAllWeeks(document.getElementById('selectAllWeeks'));
+    }
+
+    function formatNumber(val) {
+        return (val || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    /* PROJECTION DASHBOARD PIVOT RENDERER */
+    function updateProjectionDashboard() {
+        const selectedMonth = document.getElementById('projMonthSelect').value;
+        const selectedEntity = document.getElementById('projEntitySelect').value;
+        const selectedWeeks = Array.from(document.querySelectorAll('.proj-week-cb:checked')).map(cb => cb.value);
+
+        const projData = rawData.filter(d => d.type === 'projection' &&
+            (selectedMonth === "All" || d.month === selectedMonth) &&
+            (selectedEntity === "All" || d.entity === selectedEntity) &&
+            (selectedWeeks.includes(d.normalizedWeek) || selectedWeeks.includes(d.week))
+        );
+
+        renderPivotTable1(projData);
+        renderPivotTable2(projData);
+        renderPivotTable3(projData);
+        renderPivotTable4(projData);
+    }
+
+    // Table 1: Category vs Entity (Sum of SAR Amt)
+    function renderPivotTable1(data) {
+        const tbody = document.getElementById('pTable1Body');
+        const tfoot = document.getElementById('pTable1Foot');
+
+        const entities = ["Saudia", "Emirates", "Kuwait"];
+        const matrix = {};
+        const colTotals = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
+
+        MASTER_CATEGORIES.forEach(cat => {
+            matrix[cat] = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
+        });
+
+        data.forEach(d => {
+            const cat = d.category;
+            const ent = d.entity;
+            const sar = Number(d.sarAmt || 0);
+
+            if (matrix[cat] && colTotals[ent] !== undefined) {
+                matrix[cat][ent] += sar;
+                matrix[cat].Total += sar;
+                colTotals[ent] += sar;
+                colTotals.Total += sar;
+            }
+        });
+
+        tbody.innerHTML = '';
+        MASTER_CATEGORIES.forEach(cat => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><b>${cat}</b></td>
+                <td class="num-col">${formatNumber(matrix[cat].Saudia)}</td>
+                <td class="num-col">${formatNumber(matrix[cat].Emirates)}</td>
+                <td class="num-col">${formatNumber(matrix[cat].Kuwait)}</td>
+                <td class="num-col"><b>${formatNumber(matrix[cat].Total)}</b></td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        tfoot.innerHTML = `
+            <tr class="grand-total-row">
+                <td>Grand Total</td>
+                <td class="num-col">${formatNumber(colTotals.Saudia)}</td>
+                <td class="num-col">${formatNumber(colTotals.Emirates)}</td>
+                <td class="num-col">${formatNumber(colTotals.Kuwait)}</td>
+                <td class="num-col">${formatNumber(colTotals.Total)}</td>
+            </tr>
+        `;
+    }
+
+    // Table 2: Currency vs Entity (Sum of Projected Amount)
+    function renderPivotTable2(data) {
+        const tbody = document.getElementById('pTable2Body');
+        const tfoot = document.getElementById('pTable2Foot');
+
+        const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
+        const matrix = {};
+        const colTotals = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
+
+        currencies.forEach(curr => {
+            matrix[curr] = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
+        });
+
+        data.forEach(d => {
+            const curr = String(d.currency || "SAR").toUpperCase();
+            const ent = d.entity;
+            const amt = Number(d.projectedAmt || d.localAmt || 0);
+
+            if (matrix[curr] && colTotals[ent] !== undefined) {
+                matrix[curr][ent] += amt;
+                matrix[curr].Total += amt;
+                colTotals[ent] += amt;
+                colTotals.Total += amt;
+            }
+        });
+
+        tbody.innerHTML = '';
+        currencies.forEach(curr => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><b>${curr}</b></td>
+                <td class="num-col">${formatNumber(matrix[curr].Saudia)}</td>
+                <td class="num-col">${formatNumber(matrix[curr].Emirates)}</td>
+                <td class="num-col">${formatNumber(matrix[curr].Kuwait)}</td>
+                <td class="num-col"><b>${formatNumber(matrix[curr].Total)}</b></td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        tfoot.innerHTML = `
+            <tr class="grand-total-row">
+                <td>Grand Total</td>
+                <td class="num-col">${formatNumber(colTotals.Saudia)}</td>
+                <td class="num-col">${formatNumber(colTotals.Emirates)}</td>
+                <td class="num-col">${formatNumber(colTotals.Kuwait)}</td>
+                <td class="num-col">${formatNumber(colTotals.Total)}</td>
+            </tr>
+        `;
+    }
+
+    // Table 3: Owner vs SAR Amt
+    function renderPivotTable3(data) {
+        const tbody = document.getElementById('pTable3Body');
+        const tfoot = document.getElementById('pTable3Foot');
+
+        const ownerTotals = {};
+        let grandTotal = 0;
+
+        data.forEach(d => {
+            const owner = d.owner || "Unassigned";
+            const sar = Number(d.sarAmt || 0);
+
+            if (!ownerTotals[owner]) ownerTotals[owner] = 0;
+            ownerTotals[owner] += sar;
+            grandTotal += sar;
+        });
+
+        tbody.innerHTML = '';
+        Object.keys(ownerTotals).sort().forEach(owner => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><b>${owner}</b></td>
+                <td class="num-col">${formatNumber(ownerTotals[owner])}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        tfoot.innerHTML = `
+            <tr class="grand-total-row">
+                <td>Grand Total</td>
+                <td class="num-col">${formatNumber(grandTotal)}</td>
+            </tr>
+        `;
+    }
+
+    // Table 4: Owner vs Currency Matrix
+    function renderPivotTable4(data) {
+        const thead = document.getElementById('pTable4Head');
+        const tbody = document.getElementById('pTable4Body');
+        const tfoot = document.getElementById('pTable4Foot');
+
+        const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
+        const owners = [...new Set(data.map(d => d.owner || "Unassigned"))].sort();
+
+        let headHtml = `<tr><th>Row Labels</th>`;
+        currencies.forEach(c => { headHtml += `<th class="num-col">${c}</th>`; });
+        headHtml += `<th class="num-col">Grand Total</th></tr>`;
+        thead.innerHTML = headHtml;
+
+        const matrix = {};
+        const colTotals = {};
+        currencies.forEach(c => colTotals[c] = 0);
+        let grandTotalAll = 0;
+
+        owners.forEach(owner => {
+            matrix[owner] = { Total: 0 };
+            currencies.forEach(c => matrix[owner][c] = 0);
+        });
+
+        data.forEach(d => {
+            const owner = d.owner || "Unassigned";
+            const curr = String(d.currency || "SAR").toUpperCase();
+            const amt = Number(d.projectedAmt || d.localAmt || 0);
+
+            if (matrix[owner] && matrix[owner][curr] !== undefined) {
+                matrix[owner][curr] += amt;
+                matrix[owner].Total += amt;
+                colTotals[curr] += amt;
+                grandTotalAll += amt;
+            }
+        });
+
+        tbody.innerHTML = '';
+        owners.forEach(owner => {
+            let rowHtml = `<tr><td><b>${owner}</b></td>`;
+            currencies.forEach(c => {
+                rowHtml += `<td class="num-col">${formatNumber(matrix[owner][c])}</td>`;
+            });
+            rowHtml += `<td class="num-col"><b>${formatNumber(matrix[owner].Total)}</b></td></tr>`;
+            tbody.innerHTML += rowHtml;
+        });
+
+        let footHtml = `<tr class="grand-total-row"><td>Grand Total</td>`;
+        currencies.forEach(c => {
+            footHtml += `<td class="num-col">${formatNumber(colTotals[c])}</td>`;
+        });
+        footHtml += `<td class="num-col">${formatNumber(grandTotalAll)}</td></tr>`;
+        tfoot.innerHTML = footHtml;
+    }
+
+    // STANDARD VARIANCE ANALYSIS REPORT LOGIC
     function handleEntityChange() {
         const selEntity = document.getElementById('entitySelect').value;
         const currSelect = document.getElementById('currencyMode');
-        
-        if (selEntity !== "All") {
-            currSelect.value = "Local";
-        } else {
-            currSelect.value = "SAR";
-        }
+        if (selEntity !== "All") { currSelect.value = "Local"; } else { currSelect.value = "SAR"; }
         updateDashboard();
     }
 
@@ -691,35 +1115,26 @@
     }
 
     function getStatusBadge(proj, act) {
-        if (proj === 0 && act === 0) {
-            return { text: 'NO BUDGET', cssClass: 'status-nobudget' };
-        } else if (proj === 0 && act > 0) {
-            return { text: 'UNBUDGETED', cssClass: 'status-unbudgeted' };
-        } else if (act > proj) {
-            return { text: 'OVER BUDGET', cssClass: 'status-over' };
-        } else {
-            return { text: 'WITHIN BUDGET', cssClass: 'status-within' };
-        }
+        if (proj === 0 && act === 0) return { text: 'NO BUDGET', cssClass: 'status-nobudget' };
+        if (proj === 0 && act > 0) return { text: 'UNBUDGETED', cssClass: 'status-unbudgeted' };
+        if (act > proj) return { text: 'OVER BUDGET', cssClass: 'status-over' };
+        return { text: 'WITHIN BUDGET', cssClass: 'status-within' };
     }
 
     function getNativeEntityCurrency(entityStr) {
         const clean = String(entityStr || "").toLowerCase().trim();
         if (clean.indexOf("emirates") !== -1 || clean.indexOf("uae") !== -1) return "AED";
         if (clean.indexOf("kuwait") !== -1) return "KWD";
-        if (clean.indexOf("saudia") !== -1 || clean.indexOf("ksa") !== -1) return "SAR";
         return "SAR";
     }
 
     function convertLocalToNativeEntityCurrency(amount, fromCurr, targetEntity) {
         const targetCurr = getNativeEntityCurrency(targetEntity);
         if (!amount || fromCurr === targetCurr) return amount;
-
         const from = String(fromCurr || "SAR").toUpperCase().trim();
         const rateToAED = FX_RATES_TO_AED[from] !== undefined ? FX_RATES_TO_AED[from] : 1;
         const amountInAED = amount * rateToAED;
-
         if (targetCurr === 'AED') return amountInAED;
-
         const targetRateToAED = FX_RATES_TO_AED[targetCurr] !== undefined ? FX_RATES_TO_AED[targetCurr] : 1;
         return amountInAED / targetRateToAED;
     }
@@ -742,32 +1157,22 @@
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
             const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
-            
             return matchMonth && matchWeek && matchEntity && matchCat && isValidCat;
         });
 
         const aggregated = {};
-
         if (groupBy === "Category") {
-            MASTER_CATEGORIES.forEach(cat => {
-                aggregated[cat] = { projected: 0, actual: 0, byCurr: {} };
-            });
+            MASTER_CATEGORIES.forEach(cat => { aggregated[cat] = { projected: 0, actual: 0, byCurr: {} }; });
         }
 
         filtered.forEach(item => {
             const key = groupBy === "Category" ? item.category : item.entity;
-
-            if (!aggregated[key]) {
-                aggregated[key] = { projected: 0, actual: 0, byCurr: {} };
-            }
-
+            if (!aggregated[key]) aggregated[key] = { projected: 0, actual: 0, byCurr: {} };
             const curr = String(item.currency || "SAR").toUpperCase().trim();
-            if (!aggregated[key].byCurr[curr]) {
-                aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
-            }
+            if (!aggregated[key].byCurr[curr]) aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
 
             const sarAmt = Number(item.sarAmt || 0);
-            const localAmt = Number(item.localAmt || 0);
+            const localAmt = Number(item.localAmt || item.projectedAmt || 0);
 
             if (item.type === 'projection') {
                 aggregated[key].projected += (currMode === "SAR") ? sarAmt : localAmt;
@@ -779,41 +1184,23 @@
         });
 
         const labels = Object.keys(aggregated);
-        const projectedData = labels.map(l => aggregated[l].projected);
-        const actualData = labels.map(l => aggregated[l].actual);
-
-        renderChart(labels, projectedData, actualData, currMode);
+        renderChart(labels, labels.map(l => aggregated[l].projected), labels.map(l => aggregated[l].actual), currMode);
         renderTable(aggregated, filtered, groupBy, currMode, selEntity);
     }
 
     function renderChart(labels, projectedData, actualData, currMode) {
         const ctx = document.getElementById('comparisonChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
-
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: `Projected (${currMode})`,
-                        data: projectedData,
-                        backgroundColor: '#00a8b5',
-                        borderRadius: 4
-                    },
-                    {
-                        label: `Actual (${currMode})`,
-                        data: actualData,
-                        backgroundColor: '#002b3a',
-                        borderRadius: 4
-                    }
+                    { label: `Projected (${currMode})`, data: projectedData, backgroundColor: '#00a8b5', borderRadius: 4 },
+                    { label: `Actual (${currMode})`, data: actualData, backgroundColor: '#002b3a', borderRadius: 4 }
                 ]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } }
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
         });
     }
 
@@ -832,114 +1219,50 @@
         `;
 
         tbody.innerHTML = '';
+        let targetGrandCurr = (currMode === "Local" && selEntity !== "All") ? getNativeEntityCurrency(selEntity) : "SAR";
 
-        let targetGrandCurr = "SAR";
-        if (currMode === "Local" && selEntity !== "All") {
-            targetGrandCurr = getNativeEntityCurrency(selEntity);
-        }
-
-        let grandProjConverted = 0;
-        let grandActConverted = 0;
-
+        let grandProjConverted = 0, grandActConverted = 0;
         filteredRaw.forEach(item => {
             if (currMode === "SAR" || selEntity === "All") {
                 if (item.type === 'projection') grandProjConverted += Number(item.sarAmt || 0);
                 if (item.type === 'actual') grandActConverted += Number(item.sarAmt || 0);
             } else {
-                if (item.type === 'projection') grandProjConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
-                if (item.type === 'actual') grandActConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
+                if (item.type === 'projection') grandProjConverted += convertLocalToNativeEntityCurrency(item.localAmt || item.projectedAmt, item.currency, selEntity);
+                if (item.type === 'actual') grandActConverted += convertLocalToNativeEntityCurrency(item.localAmt || item.projectedAmt, item.currency, selEntity);
             }
         });
 
         Object.keys(aggregatedData).forEach(key => {
             const catObj = aggregatedData[key];
-            const proj = catObj.projected;
-            const act = catObj.actual;
-            const diff = proj - act;
+            const proj = catObj.projected, act = catObj.actual, diff = proj - act;
 
             if (currMode === "SAR") {
                 const badge = getStatusBadge(proj, act);
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><b>${key}</b></td>
-                    <td class="num-col">${formatCurrency(proj, "SAR")}</td>
-                    <td class="num-col">${formatCurrency(act, "SAR")}</td>
-                    <td class="num-col">${formatCurrency(Math.abs(diff), "SAR")}</td>
-                    <td class="num-col">${formatPercent(proj, act)}</td>
-                    <td style="text-align: center;">
-                        <span class="status-badge ${badge.cssClass}">${badge.text}</span>
-                    </td>
-                `;
-                tbody.appendChild(row);
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${key}</b></td>
+                        <td class="num-col">${formatCurrency(proj, "SAR")}</td>
+                        <td class="num-col">${formatCurrency(act, "SAR")}</td>
+                        <td class="num-col">${formatCurrency(Math.abs(diff), "SAR")}</td>
+                        <td class="num-col">${formatPercent(proj, act)}</td>
+                        <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                    </tr>`;
             } else {
-                const catHeaderRow = document.createElement('tr');
-                catHeaderRow.className = 'cat-header-row';
-                catHeaderRow.innerHTML = `
-                    <td colspan="6"><b>${key}</b></td>
-                `;
-                tbody.appendChild(catHeaderRow);
-
+                tbody.innerHTML += `<tr class="cat-header-row"><td colspan="6"><b>${key}</b></td></tr>`;
                 const currencies = Object.keys(catObj.byCurr);
-                let entityNativeProjTotal = 0;
-                let entityNativeActTotal = 0;
-                const nativeCurr = getNativeEntityCurrency(key);
-
-                if (currencies.length === 0) {
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.className = 'sub-curr-row';
-                    emptyRow.innerHTML = `
-                        <td>${nativeCurr}</td>
-                        <td class="num-col">0.00 ${nativeCurr}</td>
-                        <td class="num-col">0.00 ${nativeCurr}</td>
-                        <td class="num-col">0.00 ${nativeCurr}</td>
-                        <td class="num-col">0.0%</td>
-                        <td style="text-align: center;"><span class="status-badge status-nobudget">NO BUDGET</span></td>
-                    `;
-                    tbody.appendChild(emptyRow);
-                } else {
-                    currencies.forEach(curr => {
-                        const subProj = catObj.byCurr[curr].projected;
-                        const subAct = catObj.byCurr[curr].actual;
-                        const subDiff = subProj - subAct;
-                        const subBadge = getStatusBadge(subProj, subAct);
-
-                        entityNativeProjTotal += convertLocalToNativeEntityCurrency(subProj, curr, key);
-                        entityNativeActTotal += convertLocalToNativeEntityCurrency(subAct, curr, key);
-
-                        const subRow = document.createElement('tr');
-                        subRow.className = 'sub-curr-row';
-                        subRow.innerHTML = `
+                currencies.forEach(curr => {
+                    const subProj = catObj.byCurr[curr].projected, subAct = catObj.byCurr[curr].actual, subDiff = subProj - subAct;
+                    const subBadge = getStatusBadge(subProj, subAct);
+                    tbody.innerHTML += `
+                        <tr class="sub-curr-row">
                             <td>${curr}</td>
                             <td class="num-col">${formatCurrency(subProj, curr)}</td>
                             <td class="num-col">${formatCurrency(subAct, curr)}</td>
                             <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
                             <td class="num-col">${formatPercent(subProj, subAct)}</td>
-                            <td style="text-align: center;">
-                                <span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span>
-                            </td>
-                        `;
-                        tbody.appendChild(subRow);
-                    });
-
-                    if (groupBy === "Entity") {
-                        const entityDiff = entityNativeProjTotal - entityNativeActTotal;
-                        const entityBadge = getStatusBadge(entityNativeProjTotal, entityNativeActTotal);
-
-                        const entityTotalRow = document.createElement('tr');
-                        entityTotalRow.className = 'entity-total-row';
-                        entityTotalRow.innerHTML = `
-                            <td>${key} Total (${nativeCurr})</td>
-                            <td class="num-col">${formatCurrency(entityNativeProjTotal, nativeCurr)}</td>
-                            <td class="num-col">${formatCurrency(entityNativeActTotal, nativeCurr)}</td>
-                            <td class="num-col">${formatCurrency(Math.abs(entityDiff), nativeCurr)}</td>
-                            <td class="num-col">${formatPercent(entityNativeProjTotal, entityNativeActTotal)}</td>
-                            <td style="text-align: center;">
-                                <span class="status-badge ${entityBadge.cssClass}">${entityBadge.text}</span>
-                            </td>
-                        `;
-                        tbody.appendChild(entityTotalRow);
-                    }
-                }
+                            <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
+                        </tr>`;
+                });
             }
         });
 
@@ -953,12 +1276,16 @@
                 <td class="num-col">${formatCurrency(grandActConverted, targetGrandCurr)}</td>
                 <td class="num-col">${formatCurrency(Math.abs(totalDiffDisp), targetGrandCurr)}</td>
                 <td class="num-col">${formatPercent(grandProjConverted, grandActConverted)}</td>
-                <td style="text-align: center;">
-                    <span class="status-badge ${totalBadgeDisp.cssClass}">${totalBadgeDisp.text}</span>
-                </td>
-            </tr>
-        `;
+                <td style="text-align: center;"><span class="status-badge ${totalBadgeDisp.cssClass}">${totalBadgeDisp.text}</span></td>
+            </tr>`;
     }
+
+    // Close dropdown on outside click
+    window.onclick = function(event) {
+        if (!event.target.closest('.multi-select-container')) {
+            document.getElementById('projWeekDropdown').classList.remove('show');
+        }
+    };
 
     fetchLiveGoogleSheetData();
 </script>
