@@ -177,7 +177,7 @@
             padding: 18px;
             border-radius: 8px;
             margin-bottom: 28px;
-            align-items: center;
+            align-items: flex-end;
             flex-wrap: wrap;
         }
 
@@ -204,12 +204,34 @@
             color: var(--text-primary);
             outline: none;
             cursor: pointer;
-            min-width: 150px;
+            min-width: 140px;
             transition: border-color 0.2s ease;
         }
 
         select:focus {
             border-color: var(--almosafer-teal);
+        }
+
+        .btn-reset {
+            padding: 9px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--almosafer-coral);
+            background-color: #fdf2f2;
+            color: var(--almosafer-coral);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-reset:hover {
+            background-color: var(--almosafer-coral);
+            color: #ffffff;
         }
 
         .section-label-container {
@@ -396,6 +418,7 @@
                 <div class="brand-title-badge">FY 2026 Reporting</div>
             </div>
 
+            <!-- CONTROLS CONTAINER WITH RESET BUTTON -->
             <div class="controls-container">
                 <div class="control-group">
                     <label for="monthSelect">Month</label>
@@ -432,6 +455,12 @@
                         <option value="Entity">Entity</option>
                     </select>
                 </div>
+
+                <!-- Reset Filters Button -->
+                <button class="btn-reset" onclick="resetAllFilters()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Reset Filters
+                </button>
             </div>
 
             <div class="section-label-container">
@@ -653,6 +682,17 @@
         updateDashboard();
     }
 
+    // Reset All Filters Function
+    function resetAllFilters() {
+        document.getElementById('monthSelect').value = "All";
+        document.getElementById('weekSelect').value = "All";
+        document.getElementById('entitySelect').value = "All";
+        document.getElementById('categorySelect').value = "All";
+        document.getElementById('currencyMode').value = "SAR";
+        document.getElementById('groupSelect').value = "Category";
+        updateDashboard();
+    }
+
     function formatCurrency(val, currencyLabel) {
         const cleanLabel = (currencyLabel || "SAR").substring(0, 4).toUpperCase().trim();
         return (val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + cleanLabel;
@@ -757,7 +797,7 @@
         const actualData = labels.map(l => aggregated[l].actual);
 
         renderChart(labels, projectedData, actualData, currMode);
-        renderTable(aggregated, filtered, groupBy, currMode);
+        renderTable(aggregated, filtered, groupBy, currMode, selEntity);
     }
 
     function renderChart(labels, projectedData, actualData, currMode) {
@@ -791,7 +831,7 @@
         });
     }
 
-    function renderTable(aggregatedData, filteredRaw, groupBy, currMode) {
+    function renderTable(aggregatedData, filteredRaw, groupBy, currMode, selEntity) {
         const headerRow = document.getElementById('tableHeader');
         const tbody = document.getElementById('tableBody');
         const tfoot = document.getElementById('tableFooter');
@@ -807,13 +847,24 @@
 
         tbody.innerHTML = '';
 
-        // Standard SAR totals straight from spreadsheet pre-converted SAR columns
-        let grandProjSAR = 0;
-        let grandActSAR = 0;
+        // Target Grand Total Currency determination
+        let targetGrandCurr = "SAR";
+        if (currMode === "Local" && selEntity !== "All") {
+            targetGrandCurr = getNativeEntityCurrency(selEntity);
+        }
+
+        let grandProjConverted = 0;
+        let grandActConverted = 0;
 
         filteredRaw.forEach(item => {
-            if (item.type === 'projection') grandProjSAR += Number(item.sarAmt || 0);
-            if (item.type === 'actual') grandActSAR += Number(item.sarAmt || 0);
+            if (currMode === "SAR") {
+                if (item.type === 'projection') grandProjConverted += Number(item.sarAmt || 0);
+                if (item.type === 'actual') grandActConverted += Number(item.sarAmt || 0);
+            } else {
+                // In local mode, convert to selected country native currency (AED for Emirates, KWD for Kuwait)
+                if (item.type === 'projection') grandProjConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
+                if (item.type === 'actual') grandActConverted += convertLocalToNativeEntityCurrency(item.localAmt, item.currency, selEntity);
+            }
         });
 
         Object.keys(aggregatedData).forEach(key => {
@@ -837,7 +888,6 @@
                 `;
                 tbody.appendChild(row);
             } else {
-                // Header row
                 const catHeaderRow = document.createElement('tr');
                 catHeaderRow.className = 'cat-header-row';
                 catHeaderRow.innerHTML = `
@@ -887,7 +937,6 @@
                         tbody.appendChild(subRow);
                     });
 
-                    // Add Entity Sub-Total Row when grouped by Entity
                     if (groupBy === "Entity") {
                         const entityDiff = entityNativeProjTotal - entityNativeActTotal;
                         const entityBadge = getStatusBadge(entityNativeProjTotal, entityNativeActTotal);
@@ -910,19 +959,18 @@
             }
         });
 
-        // Grand Total Row in SAR matching Google Sheet SAR columns
-        const totalDiffSAR = grandProjSAR - grandActSAR;
-        const totalBadgeSAR = getStatusBadge(grandProjSAR, grandActSAR);
+        const totalDiffDisp = grandProjConverted - grandActConverted;
+        const totalBadgeDisp = getStatusBadge(grandProjConverted, grandActConverted);
 
         tfoot.innerHTML = `
             <tr>
-                <td>TOTAL (SAR)</td>
-                <td class="num-col">${formatCurrency(grandProjSAR, "SAR")}</td>
-                <td class="num-col">${formatCurrency(grandActSAR, "SAR")}</td>
-                <td class="num-col">${formatCurrency(Math.abs(totalDiffSAR), "SAR")}</td>
-                <td class="num-col">${formatPercent(grandProjSAR, grandActSAR)}</td>
+                <td>TOTAL (${targetGrandCurr})</td>
+                <td class="num-col">${formatCurrency(grandProjConverted, targetGrandCurr)}</td>
+                <td class="num-col">${formatCurrency(grandActConverted, targetGrandCurr)}</td>
+                <td class="num-col">${formatCurrency(Math.abs(totalDiffDisp), targetGrandCurr)}</td>
+                <td class="num-col">${formatPercent(grandProjConverted, grandActConverted)}</td>
                 <td style="text-align: center;">
-                    <span class="status-badge ${totalBadgeSAR.cssClass}">${totalBadgeSAR.text}</span>
+                    <span class="status-badge ${totalBadgeDisp.cssClass}">${totalBadgeDisp.text}</span>
                 </td>
             </tr>
         `;
