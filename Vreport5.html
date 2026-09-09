@@ -347,42 +347,50 @@
         <li class="nav-item active">
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
             Variance Analysis Report
-        </li>
-    </ul>
-</aside>
+function fetchLiveGoogleSheetData() {
+        window.handleScriptResponse = function(response) {
+            let dataPhase1 = [];
+            let dataPhase2 = [];
 
-<main class="main-wrapper">
-    <div class="dashboard-card">
-        <div class="brand-header">
-            <div class="page-title-text">Variance Analysis Dashboard</div>
-            <div class="brand-title-badge">FY 2026 Reporting</div>
-        </div>
+            if (response && response.phase1 && Array.isArray(response.phase1)) {
+                dataPhase1 = response.phase1;
+                dataPhase2 = response.phase2 || [];
+            } else if (Array.isArray(response)) {
+                // Backward compatibility safeguard if payload returns flat array
+                dataPhase1 = response;
+            }
 
-        <div class="controls-container">
-            <div class="control-group">
-                <label for="monthSelect">Month</label>
-                <select id="monthSelect" onchange="updateDashboard()">
-                    <option value="All">All Months</option>
-                </select>
-            </div>
+            // --- EXECUTE PHASE 1 PIPELINE (EXACT ORIGINAL LOGIC) ---
+            rawData = dataPhase1.map(item => ({
+                ...item,
+                month: cleanMonthString(item.month),
+                category: normalizeCategory(item.category),
+                normalizedWeek: getWeekKey(item.week),
+                entity: isValidEntity(item.entity) ? String(item.entity).trim() : null
+            }));
 
-            <div class="control-group">
-                <label for="weekSelect">Week</label>
-                <select id="weekSelect" onchange="updateDashboard()">
-                    <option value="All">All Weeks</option>
-                </select>
-            </div>
+            populateFilters();
+            updateDashboard();
 
-            <div class="control-group">
-                <label for="entitySelect">Entity (Country)</label>
-                <select id="entitySelect" onchange="handleEntityChange()">
-                    <option value="All">All Entities</option>
-                </select>
-            </div>
+            // --- EXECUTE PHASE 2 PIPELINE ---
+            rawDataPhase2 = dataPhase2.map(item => ({
+                ...item,
+                month: cleanMonthString(item.month),
+                normalizedWeek: getWeekKey(item.week),
+                entity: isValidEntity(item.entity) ? String(item.entity).trim() : "Unknown",
+                owner: item.owner ? String(item.owner).trim() : "Unassigned"
+            }));
 
-            <div class="control-group">
-                <label for="categorySelect">Category</label>
-                <select id="categorySelect" onchange="updateDashboard()">
+            if (typeof populateProjectionFilters === 'function') {
+                populateProjectionFilters();
+                updateProjectionDashboard();
+            }
+        };
+
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SHEET_API_URL}?callback=handleScriptResponse`;
+        document.body.appendChild(script);
+    }
                     <option value="All">All Categories</option>
                 </select>
             </div>
