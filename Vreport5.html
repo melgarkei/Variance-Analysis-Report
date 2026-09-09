@@ -500,7 +500,6 @@
         "Trade Air - LCC"
     ];
 
-    // Conversion Rates to AED
     const FX_RATES_TO_AED = {
         'AED': 1,
         'AUD': 2.319702198,
@@ -677,7 +676,6 @@
 
         if (from === target) return amount;
 
-        // Convert to AED first as base, then to target
         const rateToAED = FX_RATES_TO_AED[from] !== undefined ? FX_RATES_TO_AED[from] : 1;
         const amountInAED = amount * rateToAED;
 
@@ -687,12 +685,18 @@
         return amountInAED / targetRateToAED;
     }
 
-    function getTargetEntityCurrency(entityStr) {
-        const clean = String(entityStr || "").toLowerCase().trim();
+    // Evaluates context to ensure All Entities defaults to SAR
+    function getTargetEntityCurrency(entityStr, currMode) {
+        if (currMode === "SAR" || !entityStr || entityStr === "All") {
+            return "SAR";
+        }
+
+        const clean = String(entityStr).toLowerCase().trim();
         if (clean.indexOf("emirates") !== -1 || clean.indexOf("uae") !== -1) return "AED";
         if (clean.indexOf("kuwait") !== -1) return "KWD";
         if (clean.indexOf("saudia") !== -1 || clean.indexOf("ksa") !== -1) return "SAR";
-        return "AED"; // Default for All Entities Local View
+
+        return "SAR";
     }
 
     function updateDashboard() {
@@ -804,11 +808,7 @@
 
         tbody.innerHTML = '';
 
-        // Context-aware target currency for grand total
-        let targetGrandCurr = "SAR";
-        if (currMode === "Local") {
-            targetGrandCurr = getTargetEntityCurrency(activeEntity);
-        }
+        const targetGrandCurr = getTargetEntityCurrency(activeEntity, currMode);
 
         let totalProjConverted = 0;
         let totalActConverted = 0;
