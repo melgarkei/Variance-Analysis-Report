@@ -214,40 +214,42 @@
             margin-bottom: 16px;
         }
 
-        .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
-        @media (max-width: 1024px) { .grid-2x2 { grid-template-columns: 1fr; } }
+        /* PHASE 2 UN-CRAMPED LAYOUT STYLES */
+        .phase2-stack { display: flex; flex-direction: column; gap: 28px; margin-top: 20px; }
 
         .pivot-card {
             background-color: #ffffff;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 18px;
+            padding: 24px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            overflow-x: auto;
+            width: 100%;
         }
 
         .pivot-title {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--almosafer-navy);
-            margin-bottom: 12px;
-            padding-bottom: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
             border-bottom: 2px solid var(--almosafer-teal);
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-        th { font-weight: 700; color: var(--almosafer-navy); padding: 8px 12px; border-bottom: 2px solid var(--almosafer-navy); background-color: #f8fafc; white-space: nowrap; }
-        td { padding: 8px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; }
+        th { font-weight: 700; color: var(--almosafer-navy); padding: 10px 14px; border-bottom: 2px solid var(--almosafer-navy); background-color: #f8fafc; white-space: nowrap; }
+        td { padding: 10px 14px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; }
 
         .cat-header-row td { font-weight: 700; background-color: #f1f5f9; color: var(--almosafer-navy); border-top: 1px solid #cbd5e1; }
         .sub-curr-row td { padding-left: 24px; font-size: 12px; background-color: #ffffff; }
 
-        .leader-row { cursor: pointer; background-color: #f8fafc; }
-        .leader-row:hover { background-color: #e2e8f0; }
-        .member-row { display: none; background-color: #ffffff; }
-        .member-row td:first-child { padding-left: 32px; font-style: italic; }
+        /* UNIFORM WHITE BACKGROUND FOR LEADER & MEMBER ROWS IN PHASE 2 */
+        .leader-row-p2 { cursor: pointer; background-color: #ffffff !important; }
+        .leader-row-p2:hover { background-color: #f8fafc !important; }
+        .member-row-p2 { display: none; background-color: #ffffff !important; }
+        .member-row-p2 td:first-child { padding-left: 32px; font-style: italic; }
 
         tfoot td, .grand-total-row td {
             font-weight: 800;
@@ -422,7 +424,7 @@
         </div>
     </div>
 
-    <!-- PROJECTION DASHBOARD (PHASE 2) -->
+    <!-- PROJECTION DASHBOARD (PHASE 2 - UN-CRAMPED EXPANDED DESIGN) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -469,25 +471,27 @@
                 </button>
             </div>
 
-            <div class="grid-2x2">
+            <div class="phase2-stack">
                 <div class="pivot-card">
                     <div class="pivot-title">
                         <span>Sum of SAR Amt</span>
                         <span style="font-size: 11px; color: var(--text-secondary);">Column Labels: Entity</span>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Row Labels</th>
-                                <th class="num-col">Saudia</th>
-                                <th class="num-col">Emirates</th>
-                                <th class="num-col">Kuwait</th>
-                                <th class="num-col">Grand Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pTable1Body"><tr><td colspan="5" class="loading-state">Loading...</td></tr></tbody>
-                        <tfoot id="pTable1Foot"></tfoot>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Row Labels (Category)</th>
+                                    <th class="num-col">Saudia</th>
+                                    <th class="num-col">Emirates</th>
+                                    <th class="num-col">Kuwait</th>
+                                    <th class="num-col">Grand Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pTable1Body"><tr><td colspan="5" class="loading-state">Loading...</td></tr></tbody>
+                            <tfoot id="pTable1Foot"></tfoot>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="pivot-card">
@@ -495,40 +499,46 @@
                         <span>Sum of Projected Amount</span>
                         <span style="font-size: 11px; color: var(--text-secondary);">Column Labels: Entity</span>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Row Labels</th>
-                                <th class="num-col">Saudia</th>
-                                <th class="num-col">Emirates</th>
-                                <th class="num-col">Kuwait</th>
-                                <th class="num-col">Grand Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pTable2Body"><tr><td colspan="5" class="loading-state">Loading...</td></tr></tbody>
-                        <tfoot id="pTable2Foot"></tfoot>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Row Labels (Currency)</th>
+                                    <th class="num-col">Saudia</th>
+                                    <th class="num-col">Emirates</th>
+                                    <th class="num-col">Kuwait</th>
+                                    <th class="num-col">Grand Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pTable2Body"><tr><td colspan="5" class="loading-state">Loading...</td></tr></tbody>
+                            <tfoot id="pTable2Foot"></tfoot>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="pivot-card">
                     <div class="pivot-title">
                         <span>Sum of SAR Amt by Owner</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Click leader names to expand team members</span>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Row Labels (Owner)</th>
-                                <th class="num-col">Sum of SAR Amt</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pTable3Body"><tr><td colspan="2" class="loading-state">Loading...</td></tr></tbody>
-                        <tfoot id="pTable3Foot"></tfoot>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Row Labels (Owner)</th>
+                                    <th class="num-col">Sum of SAR Amt</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pTable3Body"><tr><td colspan="2" class="loading-state">Loading...</td></tr></tbody>
+                            <tfoot id="pTable3Foot"></tfoot>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="pivot-card">
                     <div class="pivot-title">
                         <span>Sum of Projected Amount by Owner & Currency</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Click leader names to expand team members</span>
                     </div>
                     <div style="overflow-x: auto;">
                         <table id="pTable4">
@@ -802,6 +812,26 @@
     function toggleLeaderGroup(leaderName) {
         const memberRows = document.querySelectorAll(`.team-${leaderName}`);
         const icon = document.getElementById(`icon-${leaderName}`);
+        let isOpening = false;
+
+        memberRows.forEach(row => {
+            if (row.style.display === "table-row") {
+                row.style.display = "none";
+            } else {
+                row.style.display = "table-row";
+                isOpening = true;
+            }
+        });
+
+        if (icon) {
+            icon.textContent = isOpening ? "▼" : "▶";
+        }
+    }
+
+    // TOGGLE FOR PHASE 2 OWNER TABLES
+    function toggleLeaderGroupP2(leaderName) {
+        const memberRows = document.querySelectorAll(`.team-p2-${leaderName}`);
+        const icon = document.getElementById(`icon-p2-${leaderName}`);
         let isOpening = false;
 
         memberRows.forEach(row => {
@@ -1162,15 +1192,48 @@
         const tfoot = document.getElementById('pTable3Foot');
         const ownerTotals = {};
         let grandTotal = 0;
+
         data.forEach(d => {
-            const owner = d.owner || "Unassigned", sar = Number(d.sarAmt || 0);
+            const owner = d.owner;
+            if (!owner) return;
+            const sar = Number(d.sarAmt || 0);
             if (!ownerTotals[owner]) ownerTotals[owner] = 0;
-            ownerTotals[owner] += sar; grandTotal += sar;
+            ownerTotals[owner] += sar; 
+            grandTotal += sar;
         });
+
         tbody.innerHTML = '';
-        Object.keys(ownerTotals).sort().forEach(owner => {
-            tbody.innerHTML += `<tr><td><b>${owner}</b></td><td class="num-col">${formatNumber(ownerTotals[owner])}</td></tr>`;
+        const renderedOwners = new Set();
+
+        Object.keys(TEAM_STRUCTURE).forEach(leader => {
+            const members = TEAM_STRUCTURE[leader];
+            let leaderTotal = ownerTotals[leader] || 0;
+            members.forEach(m => { leaderTotal += (ownerTotals[m] || 0); });
+
+            tbody.innerHTML += `
+                <tr class="leader-row-p2" onclick="toggleLeaderGroupP2('${leader}')">
+                    <td><b><span id="icon-p2-${leader}" style="margin-right:8px;">▶</span>${leader}</b></td>
+                    <td class="num-col"><b>${formatNumber(leaderTotal)}</b></td>
+                </tr>`;
+            renderedOwners.add(leader);
+
+            members.forEach(m => {
+                const val = ownerTotals[m] || 0;
+                tbody.innerHTML += `
+                    <tr class="member-row-p2 team-p2-${leader}">
+                        <td>↳ ${m}</td>
+                        <td class="num-col">${formatNumber(val)}</td>
+                    </tr>`;
+                renderedOwners.add(m);
+            });
         });
+
+        Object.keys(ownerTotals).sort().forEach(owner => {
+            if (!renderedOwners.has(owner) && owner !== "null" && owner !== "#N/A") {
+                tbody.innerHTML += `<tr><td><b>${owner}</b></td><td class="num-col">${formatNumber(ownerTotals[owner])}</td></tr>`;
+            }
+        });
+
         tfoot.innerHTML = `<tr class="grand-total-row"><td>Grand Total</td><td class="num-col">${formatNumber(grandTotal)}</td></tr>`;
     }
 
@@ -1179,9 +1242,8 @@
         const tbody = document.getElementById('pTable4Body');
         const tfoot = document.getElementById('pTable4Foot');
         const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
-        const owners = [...new Set(data.map(d => d.owner || "Unassigned"))].sort();
 
-        let headHtml = `<tr><th>Row Labels</th>`;
+        let headHtml = `<tr><th>Row Labels (Owner)</th>`;
         currencies.forEach(c => { headHtml += `<th class="num-col">${c}</th>`; });
         headHtml += `<th class="num-col">Grand Total</th></tr>`;
         thead.innerHTML = headHtml;
@@ -1189,25 +1251,63 @@
         const matrix = {}, colTotals = {};
         currencies.forEach(c => colTotals[c] = 0);
         let grandTotalAll = 0;
-        owners.forEach(owner => {
-            matrix[owner] = { Total: 0 };
-            currencies.forEach(c => matrix[owner][c] = 0);
-        });
 
         data.forEach(d => {
-            const owner = d.owner || "Unassigned", curr = String(d.currency || "SAR").toUpperCase(), amt = Number(d.projectedAmt || d.localAmt || 0);
-            if (matrix[owner] && matrix[owner][curr] !== undefined) {
-                matrix[owner][curr] += amt; matrix[owner].Total += amt;
-                colTotals[curr] += amt; grandTotalAll += amt;
+            const owner = d.owner;
+            if (!owner) return;
+            const curr = String(d.currency || "SAR").toUpperCase();
+            const amt = Number(d.projectedAmt || d.localAmt || 0);
+
+            if (!matrix[owner]) {
+                matrix[owner] = { Total: 0 };
+                currencies.forEach(c => matrix[owner][c] = 0);
             }
+            matrix[owner][curr] += amt; 
+            matrix[owner].Total += amt;
+            colTotals[curr] += amt; 
+            grandTotalAll += amt;
         });
 
         tbody.innerHTML = '';
-        owners.forEach(owner => {
-            let rowHtml = `<tr><td><b>${owner}</b></td>`;
-            currencies.forEach(c => { rowHtml += `<td class="num-col">${formatNumber(matrix[owner][c])}</td>`; });
-            rowHtml += `<td class="num-col"><b>${formatNumber(matrix[owner].Total)}</b></td></tr>`;
+        const renderedOwners = new Set();
+
+        Object.keys(TEAM_STRUCTURE).forEach(leader => {
+            const members = TEAM_STRUCTURE[leader];
+            const leaderRow = { Total: matrix[leader] ? matrix[leader].Total : 0 };
+            currencies.forEach(c => { leaderRow[c] = matrix[leader] ? matrix[leader][c] : 0; });
+
+            members.forEach(m => {
+                if (matrix[m]) {
+                    leaderRow.Total += matrix[m].Total;
+                    currencies.forEach(c => { leaderRow[c] += matrix[m][c]; });
+                }
+            });
+
+            let rowHtml = `<tr class="leader-row-p2" onclick="toggleLeaderGroupP2('table4_${leader}')"><td><b><span id="icon-p2-table4_${leader}" style="margin-right:8px;">▶</span>${leader}</b></td>`;
+            currencies.forEach(c => { rowHtml += `<td class="num-col"><b>${formatNumber(leaderRow[c])}</b></td>`; });
+            rowHtml += `<td class="num-col"><b>${formatNumber(leaderRow.Total)}</b></td></tr>`;
             tbody.innerHTML += rowHtml;
+            renderedOwners.add(leader);
+
+            members.forEach(m => {
+                const mRow = matrix[m] || { Total: 0 };
+                currencies.forEach(c => { if (mRow[c] === undefined) mRow[c] = 0; });
+
+                let mHtml = `<tr class="member-row-p2 team-p2-table4_${leader}"><td>↳ ${m}</td>`;
+                currencies.forEach(c => { mHtml += `<td class="num-col">${formatNumber(mRow[c])}</td>`; });
+                mHtml += `<td class="num-col">${formatNumber(mRow.Total)}</td></tr>`;
+                tbody.innerHTML += mHtml;
+                renderedOwners.add(m);
+            });
+        });
+
+        Object.keys(matrix).sort().forEach(owner => {
+            if (!renderedOwners.has(owner) && owner !== "null" && owner !== "#N/A") {
+                let rowHtml = `<tr><td><b>${owner}</b></td>`;
+                currencies.forEach(c => { rowHtml += `<td class="num-col">${formatNumber(matrix[owner][c])}</td>`; });
+                rowHtml += `<td class="num-col"><b>${formatNumber(matrix[owner].Total)}</b></td></tr>`;
+                tbody.innerHTML += rowHtml;
+            }
         });
 
         let footHtml = `<tr class="grand-total-row"><td>Grand Total</td>`;
