@@ -640,7 +640,6 @@
 
     let chartInstance = null;
 
-    // FIXED OWNER PARSING LOGIC
     function cleanOwnerName(ownerStr) {
         if (!ownerStr) return null;
         const clean = String(ownerStr).trim();
@@ -649,16 +648,11 @@
             return null;
         }
 
-        // Specific OTC Check so it lands under Hossam
         if (lower.includes("otc") || lower.includes("over the counter")) return "OTC";
-
-        // Specific Leader & Team Checks
         if (lower.includes("refaat")) return "Refaat";
         if (lower.includes("hossam")) return "Hossam";
         if (lower.includes("israa")) return "Israa";
         if (lower.includes("mohamed ashraf") || lower.includes("ashraf")) return "Mohamed Ashraf";
-        
-        // Strictly separate Amr Zekrallah from Elzek so projected amounts don't shift
         if (lower.includes("amr zekrallah") || lower.includes("amr")) return "Amr Zekrallah";
         if (lower === "elzek" || lower.includes("elzek")) return "Elzek";
 
@@ -778,11 +772,11 @@
         const projVariancePct = ((proj - act) / proj) * 100;
 
         if (proj < act) {
-            return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' }; // Red
+            return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' };
         } else if (projVariancePct >= 0 && projVariancePct <= 5.0) {
-            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' }; // Green (0% to 5%)
+            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' };
         } else {
-            return { text: 'OVER PROJECTED', cssClass: 'status-over' }; // Gray
+            return { text: 'OVER PROJECTED', cssClass: 'status-over' };
         }
     }
 
@@ -955,7 +949,7 @@
 
                 tbody.innerHTML += `
                     <tr class="leader-row" onclick="toggleLeaderGroup('${leader}')">
-                        <td><b><span id="icon-${leader}" style="margin-right:8px;">▶</span>${leader} (Team Total)</b></td>
+                        <td><b><span id="icon-${leader}" style="margin-right:8px;">▶</span>${leader}</b></td>
                         <td class="num-col">${formatCurrency(leaderProj, targetGrandCurr)}</td>
                         <td class="num-col">${formatCurrency(leaderAct, targetGrandCurr)}</td>
                         <td class="num-col">${formatCurrency(Math.abs(lDiff), targetGrandCurr)}</td>
