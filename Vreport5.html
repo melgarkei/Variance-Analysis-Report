@@ -732,6 +732,7 @@
         return pct.toFixed(1) + "%";
     }
 
+    // PROJECTED AMOUNT STATUS LOGIC
     function getStatusBadge(proj, act) {
         if (proj === 0 && act === 0) {
             return { text: 'NO ACTIVITY', cssClass: 'status-nobudget' };
@@ -805,6 +806,7 @@
             const curr = String(item.currency || "SAR").toUpperCase().trim();
             if (!aggregated[key].byCurr[curr]) aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
 
+            // sarAmt MUST ALWAYS BE USED FOR THE MAIN SAR SUBTOTAL
             const sarAmt = Number(item.sarAmt || 0);
             const localAmt = Number(item.localAmt || 0);
 
@@ -815,8 +817,8 @@
                 effProj = convertLocalToNativeEntityCurrency(localAmt, item.currency, selEntity);
                 effAct = convertLocalToNativeEntityCurrency(localAmt, item.currency, selEntity);
             } else if (currMode === "Local" && selEntity === "All") {
-                effProj = localAmt;
-                effAct = localAmt;
+                effProj = sarAmt; // Strictly use SAR Amt for main totals
+                effAct = sarAmt;
             }
 
             if (item.type === 'projection') {
@@ -882,7 +884,7 @@
             const proj = catObj.projected, act = catObj.actual, diff = proj - act;
 
             if (currMode === "SAR") {
-                // SINGLE LINE ROW IN SAR MODE
+                // SINGLE LINE SAR MODE: ACCURATE SAR CONVERTED SUBTOTALS
                 const badge = getStatusBadge(proj, act);
                 tbody.innerHTML += `
                     <tr>
@@ -894,7 +896,7 @@
                         <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
                     </tr>`;
             } else {
-                // EXPANDED INDIVIDUAL CURRENCY SUB-ROWS IN LOCAL CURRENCY MODE
+                // LOCAL CURRENCY MODE: ACCURATE CONVERTED SUBTOTAL + INDIVIDUAL NATIVE CURRENCY SUB-ROWS
                 const badge = getStatusBadge(proj, act);
                 tbody.innerHTML += `
                     <tr class="cat-header-row">
