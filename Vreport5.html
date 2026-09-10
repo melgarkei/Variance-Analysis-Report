@@ -244,7 +244,6 @@
         .cat-header-row td { font-weight: 700; background-color: #f1f5f9; color: var(--almosafer-navy); border-top: 1px solid #cbd5e1; }
         .sub-curr-row td { padding-left: 24px; font-size: 12px; background-color: #ffffff; }
 
-        /* Leader Parent & Member Rows */
         .leader-row { cursor: pointer; background-color: #f8fafc; }
         .leader-row:hover { background-color: #e2e8f0; }
         .member-row { display: none; background-color: #ffffff; }
@@ -572,7 +571,6 @@
     let rawData = [];
     let rawDataPhase2 = [];
 
-    // TEAM HIERARCHY STRUCTURE FOR OWNER VIEW
     const TEAM_STRUCTURE = {
         "Refaat": ["Mohamed Ashraf", "Elzek", "Israa"],
         "Hossam": ["OTC"]
@@ -642,6 +640,7 @@
 
     let chartInstance = null;
 
+    // FIXED OWNER PARSING LOGIC
     function cleanOwnerName(ownerStr) {
         if (!ownerStr) return null;
         const clean = String(ownerStr).trim();
@@ -649,12 +648,20 @@
         if (lower === "#n/a" || lower === "n/a" || lower === "null" || lower === "undefined" || lower === "") {
             return null;
         }
+
+        // Specific OTC Check so it lands under Hossam
+        if (lower.includes("otc") || lower.includes("over the counter")) return "OTC";
+
+        // Specific Leader & Team Checks
         if (lower.includes("refaat")) return "Refaat";
         if (lower.includes("hossam")) return "Hossam";
         if (lower.includes("israa")) return "Israa";
         if (lower.includes("mohamed ashraf") || lower.includes("ashraf")) return "Mohamed Ashraf";
-        if (lower.includes("elzek") || lower.includes("zekrallah")) return "Elzek";
-        if (lower.includes("otc")) return "OTC";
+        
+        // Strictly separate Amr Zekrallah from Elzek so projected amounts don't shift
+        if (lower.includes("amr zekrallah") || lower.includes("amr")) return "Amr Zekrallah";
+        if (lower === "elzek" || lower.includes("elzek")) return "Elzek";
+
         return clean;
     }
 
@@ -760,7 +767,6 @@
         return pct.toFixed(1) + "%";
     }
 
-    // PROJECTED AMOUNT STATUS LOGIC
     function getStatusBadge(proj, act) {
         if (proj === 0 && act === 0) {
             return { text: 'NO ACTIVITY', cssClass: 'status-nobudget' };
@@ -773,8 +779,8 @@
 
         if (proj < act) {
             return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' }; // Red
-        } else if (projVariancePct >= 0 && projVariancePct <= 2.0) {
-            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' }; // Green
+        } else if (projVariancePct >= 0 && projVariancePct <= 5.0) {
+            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' }; // Green (0% to 5%)
         } else {
             return { text: 'OVER PROJECTED', cssClass: 'status-over' }; // Gray
         }
@@ -850,7 +856,7 @@
             if (groupBy === "Entity") key = item.entity || "Unknown";
             if (groupBy === "Owner") key = item.owner;
 
-            if (!key) return; // REMOVE #N/A
+            if (!key) return;
 
             if (!aggregated[key]) aggregated[key] = { projected: 0, actual: 0, byCurr: {} };
             const curr = String(item.currency || "SAR").toUpperCase().trim();
@@ -930,7 +936,6 @@
         });
 
         if (groupBy === "Owner") {
-            // HIERARCHICAL OWNER RENDERING FOR REFAAT & HOSSAM TEAMS
             const renderedOwners = new Set();
 
             Object.keys(TEAM_STRUCTURE).forEach(leader => {
@@ -938,7 +943,6 @@
                 let leaderProj = aggregatedData[leader] ? aggregatedData[leader].projected : 0;
                 let leaderAct = aggregatedData[leader] ? aggregatedData[leader].actual : 0;
 
-                // ACCUMULATE TEAM TOTALS INTO LEADER ROW
                 members.forEach(m => {
                     if (aggregatedData[m]) {
                         leaderProj += aggregatedData[m].projected;
@@ -949,7 +953,6 @@
                 const lDiff = leaderProj - leaderAct;
                 const lBadge = getStatusBadge(leaderProj, leaderAct);
 
-                // RENDER CLICKABLE LEADER ROW
                 tbody.innerHTML += `
                     <tr class="leader-row" onclick="toggleLeaderGroup('${leader}')">
                         <td><b><span id="icon-${leader}" style="margin-right:8px;">▶</span>${leader} (Team Total)</b></td>
@@ -961,7 +964,6 @@
                     </tr>`;
                 renderedOwners.add(leader);
 
-                // RENDER MEMBER SUB-ROWS (HIDDEN UNTIL LEADER CLICKED)
                 members.forEach(m => {
                     if (aggregatedData[m]) {
                         const mObj = aggregatedData[m];
@@ -981,7 +983,6 @@
                 });
             });
 
-            // RENDER INDEPENDENT OWNERS (ANNE, ESSAM, AMR ZEKRALLAH, ACTIVE, ETC.)
             Object.keys(aggregatedData).forEach(key => {
                 if (!renderedOwners.has(key) && key !== "null" && key !== "#N/A") {
                     const catObj = aggregatedData[key];
@@ -1000,7 +1001,6 @@
             });
 
         } else {
-            // CATEGORY OR ENTITY STANDARD RENDERING
             Object.keys(aggregatedData).forEach(key => {
                 const catObj = aggregatedData[key];
                 const proj = catObj.projected, act = catObj.actual, diff = proj - act;
