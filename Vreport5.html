@@ -731,7 +731,6 @@
         return pct.toFixed(1) + "%";
     }
 
-    // UPDATED STATUS BADGE LOGIC
     function getStatusBadge(proj, act) {
         if (proj === 0 && act === 0) {
             return { text: 'NO ACTIVITY', cssClass: 'status-nobudget' };
@@ -840,7 +839,6 @@
         const tbody = document.getElementById('tableBody');
         const tfoot = document.getElementById('tableFooter');
 
-        // REMOVED "/ Currency" AND RENAMED STATUS HEADER
         headerRow.innerHTML = `
             <th>${groupBy === "Category" ? "Category" : "Entity"}</th>
             <th class="num-col">Projected Amount</th>
