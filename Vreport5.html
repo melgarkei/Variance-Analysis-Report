@@ -244,6 +244,12 @@
         .cat-header-row td { font-weight: 700; background-color: #f1f5f9; color: var(--almosafer-navy); border-top: 1px solid #cbd5e1; }
         .sub-curr-row td { padding-left: 24px; font-size: 12px; background-color: #ffffff; }
 
+        /* Leader Parent & Member Rows */
+        .leader-row { cursor: pointer; background-color: #f8fafc; }
+        .leader-row:hover { background-color: #e2e8f0; }
+        .member-row { display: none; background-color: #ffffff; }
+        .member-row td:first-child { padding-left: 32px; font-style: italic; }
+
         tfoot td, .grand-total-row td {
             font-weight: 800;
             background-color: #e6f7f9;
@@ -566,6 +572,12 @@
     let rawData = [];
     let rawDataPhase2 = [];
 
+    // TEAM HIERARCHY STRUCTURE FOR OWNER VIEW
+    const TEAM_STRUCTURE = {
+        "Refaat": ["Mohamed Ashraf", "Elzek", "Israa"],
+        "Hossam": ["OTC"]
+    };
+
     function fetchLiveGoogleSheetData() {
         window.handleScriptResponse = function(response) {
             let dataPhase1 = [];
@@ -585,7 +597,7 @@
                 category: normalizeCategory(item.category),
                 normalizedWeek: getWeekKey(item.week),
                 entity: isValidEntity(item.entity) ? String(item.entity).trim() : null,
-                owner: item.owner ? String(item.owner).trim() : "Unassigned"
+                owner: cleanOwnerName(item.owner)
             }));
 
             populateFilters();
@@ -597,7 +609,7 @@
                 month: cleanMonthString(item.month),
                 normalizedWeek: getWeekKey(item.week),
                 entity: isValidEntity(item.entity) ? String(item.entity).trim() : "Unknown",
-                owner: item.owner ? String(item.owner).trim() : "Unassigned"
+                owner: cleanOwnerName(item.owner)
             }));
 
             populateProjectionFilters();
@@ -629,6 +641,22 @@
     };
 
     let chartInstance = null;
+
+    function cleanOwnerName(ownerStr) {
+        if (!ownerStr) return null;
+        const clean = String(ownerStr).trim();
+        const lower = clean.toLowerCase();
+        if (lower === "#n/a" || lower === "n/a" || lower === "null" || lower === "undefined" || lower === "") {
+            return null;
+        }
+        if (lower.includes("refaat")) return "Refaat";
+        if (lower.includes("hossam")) return "Hossam";
+        if (lower.includes("israa")) return "Israa";
+        if (lower.includes("mohamed ashraf") || lower.includes("ashraf")) return "Mohamed Ashraf";
+        if (lower.includes("elzek") || lower.includes("zekrallah")) return "Elzek";
+        if (lower.includes("otc")) return "OTC";
+        return clean;
+    }
 
     function normalizeCategory(catStr) {
         if (!catStr) return "Non Trade - Other";
@@ -771,6 +799,25 @@
         return amountInAED / targetRateToAED;
     }
 
+    function toggleLeaderGroup(leaderName) {
+        const memberRows = document.querySelectorAll(`.team-${leaderName}`);
+        const icon = document.getElementById(`icon-${leaderName}`);
+        let isOpening = false;
+
+        memberRows.forEach(row => {
+            if (row.style.display === "table-row") {
+                row.style.display = "none";
+            } else {
+                row.style.display = "table-row";
+                isOpening = true;
+            }
+        });
+
+        if (icon) {
+            icon.textContent = isOpening ? "▼" : "▶";
+        }
+    }
+
     function updateDashboard() {
         if (!rawData.length) return;
 
@@ -789,7 +836,8 @@
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
             const isValidGroup = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
-            return matchMonth && matchWeek && matchEntity && matchCat && isValidGroup;
+            const isValidOwner = (groupBy === "Owner") ? (d.owner !== null) : true;
+            return matchMonth && matchWeek && matchEntity && matchCat && isValidGroup && isValidOwner;
         });
 
         const aggregated = {};
@@ -800,13 +848,14 @@
         filtered.forEach(item => {
             let key = item.category;
             if (groupBy === "Entity") key = item.entity || "Unknown";
-            if (groupBy === "Owner") key = item.owner || "Unassigned";
+            if (groupBy === "Owner") key = item.owner;
+
+            if (!key) return; // REMOVE #N/A
 
             if (!aggregated[key]) aggregated[key] = { projected: 0, actual: 0, byCurr: {} };
             const curr = String(item.currency || "SAR").toUpperCase().trim();
             if (!aggregated[key].byCurr[curr]) aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
 
-            // sarAmt MUST ALWAYS BE USED FOR THE MAIN SAR SUBTOTAL
             const sarAmt = Number(item.sarAmt || 0);
             const localAmt = Number(item.localAmt || 0);
 
@@ -817,7 +866,7 @@
                 effProj = convertLocalToNativeEntityCurrency(localAmt, item.currency, selEntity);
                 effAct = convertLocalToNativeEntityCurrency(localAmt, item.currency, selEntity);
             } else if (currMode === "Local" && selEntity === "All") {
-                effProj = sarAmt; // Strictly use SAR Amt for main totals
+                effProj = sarAmt;
                 effAct = sarAmt;
             }
 
@@ -870,6 +919,7 @@
 
         let grandProjConverted = 0, grandActConverted = 0;
         filteredRaw.forEach(item => {
+            if (groupBy === "Owner" && !item.owner) return;
             if (currMode === "SAR" || selEntity === "All") {
                 if (item.type === 'projection') grandProjConverted += Number(item.sarAmt || 0);
                 if (item.type === 'actual') grandActConverted += Number(item.sarAmt || 0);
@@ -879,51 +929,122 @@
             }
         });
 
-        Object.keys(aggregatedData).forEach(key => {
-            const catObj = aggregatedData[key];
-            const proj = catObj.projected, act = catObj.actual, diff = proj - act;
+        if (groupBy === "Owner") {
+            // HIERARCHICAL OWNER RENDERING FOR REFAAT & HOSSAM TEAMS
+            const renderedOwners = new Set();
 
-            if (currMode === "SAR") {
-                // SINGLE LINE SAR MODE: ACCURATE SAR CONVERTED SUBTOTALS
-                const badge = getStatusBadge(proj, act);
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${key}</b></td>
-                        <td class="num-col">${formatCurrency(proj, "SAR")}</td>
-                        <td class="num-col">${formatCurrency(act, "SAR")}</td>
-                        <td class="num-col">${formatCurrency(Math.abs(diff), "SAR")}</td>
-                        <td class="num-col">${formatPercent(proj, act)}</td>
-                        <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
-                    </tr>`;
-            } else {
-                // LOCAL CURRENCY MODE: ACCURATE CONVERTED SUBTOTAL + INDIVIDUAL NATIVE CURRENCY SUB-ROWS
-                const badge = getStatusBadge(proj, act);
-                tbody.innerHTML += `
-                    <tr class="cat-header-row">
-                        <td><b>${key} (Subtotal)</b></td>
-                        <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
-                        <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
-                        <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
-                        <td class="num-col">${formatPercent(proj, act)}</td>
-                        <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
-                    </tr>`;
+            Object.keys(TEAM_STRUCTURE).forEach(leader => {
+                const members = TEAM_STRUCTURE[leader];
+                let leaderProj = aggregatedData[leader] ? aggregatedData[leader].projected : 0;
+                let leaderAct = aggregatedData[leader] ? aggregatedData[leader].actual : 0;
 
-                const currencies = Object.keys(catObj.byCurr);
-                currencies.forEach(curr => {
-                    const subProj = catObj.byCurr[curr].projected, subAct = catObj.byCurr[curr].actual, subDiff = subProj - subAct;
-                    const subBadge = getStatusBadge(subProj, subAct);
-                    tbody.innerHTML += `
-                        <tr class="sub-curr-row">
-                            <td>${curr}</td>
-                            <td class="num-col">${formatCurrency(subProj, curr)}</td>
-                            <td class="num-col">${formatCurrency(subAct, curr)}</td>
-                            <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
-                            <td class="num-col">${formatPercent(subProj, subAct)}</td>
-                            <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
-                        </tr>`;
+                // ACCUMULATE TEAM TOTALS INTO LEADER ROW
+                members.forEach(m => {
+                    if (aggregatedData[m]) {
+                        leaderProj += aggregatedData[m].projected;
+                        leaderAct += aggregatedData[m].actual;
+                    }
                 });
-            }
-        });
+
+                const lDiff = leaderProj - leaderAct;
+                const lBadge = getStatusBadge(leaderProj, leaderAct);
+
+                // RENDER CLICKABLE LEADER ROW
+                tbody.innerHTML += `
+                    <tr class="leader-row" onclick="toggleLeaderGroup('${leader}')">
+                        <td><b><span id="icon-${leader}" style="margin-right:8px;">▶</span>${leader} (Team Total)</b></td>
+                        <td class="num-col">${formatCurrency(leaderProj, targetGrandCurr)}</td>
+                        <td class="num-col">${formatCurrency(leaderAct, targetGrandCurr)}</td>
+                        <td class="num-col">${formatCurrency(Math.abs(lDiff), targetGrandCurr)}</td>
+                        <td class="num-col">${formatPercent(leaderProj, leaderAct)}</td>
+                        <td style="text-align: center;"><span class="status-badge ${lBadge.cssClass}">${lBadge.text}</span></td>
+                    </tr>`;
+                renderedOwners.add(leader);
+
+                // RENDER MEMBER SUB-ROWS (HIDDEN UNTIL LEADER CLICKED)
+                members.forEach(m => {
+                    if (aggregatedData[m]) {
+                        const mObj = aggregatedData[m];
+                        const mDiff = mObj.projected - mObj.actual;
+                        const mBadge = getStatusBadge(mObj.projected, mObj.actual);
+                        tbody.innerHTML += `
+                            <tr class="member-row team-${leader}">
+                                <td>↳ ${m}</td>
+                                <td class="num-col">${formatCurrency(mObj.projected, targetGrandCurr)}</td>
+                                <td class="num-col">${formatCurrency(mObj.actual, targetGrandCurr)}</td>
+                                <td class="num-col">${formatCurrency(Math.abs(mDiff), targetGrandCurr)}</td>
+                                <td class="num-col">${formatPercent(mObj.projected, mObj.actual)}</td>
+                                <td style="text-align: center;"><span class="status-badge ${mBadge.cssClass}">${mBadge.text}</span></td>
+                            </tr>`;
+                        renderedOwners.add(m);
+                    }
+                });
+            });
+
+            // RENDER INDEPENDENT OWNERS (ANNE, ESSAM, AMR ZEKRALLAH, ACTIVE, ETC.)
+            Object.keys(aggregatedData).forEach(key => {
+                if (!renderedOwners.has(key) && key !== "null" && key !== "#N/A") {
+                    const catObj = aggregatedData[key];
+                    const proj = catObj.projected, act = catObj.actual, diff = proj - act;
+                    const badge = getStatusBadge(proj, act);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${key}</b></td>
+                            <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
+                            <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
+                            <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
+                            <td class="num-col">${formatPercent(proj, act)}</td>
+                            <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                        </tr>`;
+                }
+            });
+
+        } else {
+            // CATEGORY OR ENTITY STANDARD RENDERING
+            Object.keys(aggregatedData).forEach(key => {
+                const catObj = aggregatedData[key];
+                const proj = catObj.projected, act = catObj.actual, diff = proj - act;
+
+                if (currMode === "SAR") {
+                    const badge = getStatusBadge(proj, act);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${key}</b></td>
+                            <td class="num-col">${formatCurrency(proj, "SAR")}</td>
+                            <td class="num-col">${formatCurrency(act, "SAR")}</td>
+                            <td class="num-col">${formatCurrency(Math.abs(diff), "SAR")}</td>
+                            <td class="num-col">${formatPercent(proj, act)}</td>
+                            <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                        </tr>`;
+                } else {
+                    const badge = getStatusBadge(proj, act);
+                    tbody.innerHTML += `
+                        <tr class="cat-header-row">
+                            <td><b>${key} (Subtotal)</b></td>
+                            <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
+                            <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
+                            <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
+                            <td class="num-col">${formatPercent(proj, act)}</td>
+                            <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                        </tr>`;
+
+                    const currencies = Object.keys(catObj.byCurr);
+                    currencies.forEach(curr => {
+                        const subProj = catObj.byCurr[curr].projected, subAct = catObj.byCurr[curr].actual, subDiff = subProj - subAct;
+                        const subBadge = getStatusBadge(subProj, subAct);
+                        tbody.innerHTML += `
+                            <tr class="sub-curr-row">
+                                <td>${curr}</td>
+                                <td class="num-col">${formatCurrency(subProj, curr)}</td>
+                                <td class="num-col">${formatCurrency(subAct, curr)}</td>
+                                <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
+                                <td class="num-col">${formatPercent(subProj, subAct)}</td>
+                                <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
+                            </tr>`;
+                    });
+                }
+            });
+        }
 
         const totalDiffDisp = grandProjConverted - grandActConverted;
         const totalBadgeDisp = getStatusBadge(grandProjConverted, grandActConverted);
