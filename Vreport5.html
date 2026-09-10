@@ -214,14 +214,29 @@
             margin-bottom: 16px;
         }
 
-        /* PHASE 2 UN-CRAMPED LAYOUT STYLES */
-        .phase2-stack { display: flex; flex-direction: column; gap: 28px; margin-top: 20px; }
+        /* PHASE 2 FLEX & GRID STYLING */
+        .phase2-upper-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .phase2-upper-split { grid-template-columns: 1fr; }
+        }
+
+        .phase2-lower-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
 
         .pivot-card {
             background-color: #ffffff;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 24px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
             width: 100%;
         }
@@ -230,8 +245,8 @@
             font-size: 14px;
             font-weight: 700;
             color: var(--almosafer-navy);
-            margin-bottom: 16px;
-            padding-bottom: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
             border-bottom: 2px solid var(--almosafer-teal);
             display: flex;
             justify-content: space-between;
@@ -239,13 +254,17 @@
         }
 
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-        th { font-weight: 700; color: var(--almosafer-navy); padding: 10px 14px; border-bottom: 2px solid var(--almosafer-navy); background-color: #f8fafc; white-space: nowrap; }
-        td { padding: 10px 14px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; }
+        th { font-weight: 700; color: var(--almosafer-navy); padding: 10px 12px; border-bottom: 2px solid var(--almosafer-navy); background-color: #f8fafc; white-space: nowrap; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; }
 
         .cat-header-row td { font-weight: 700; background-color: #f1f5f9; color: var(--almosafer-navy); border-top: 1px solid #cbd5e1; }
         .sub-curr-row td { padding-left: 24px; font-size: 12px; background-color: #ffffff; }
 
-        /* UNIFORM WHITE BACKGROUND FOR LEADER & MEMBER ROWS IN PHASE 2 */
+        .leader-row { cursor: pointer; background-color: #f8fafc; }
+        .leader-row:hover { background-color: #e2e8f0; }
+        .member-row { display: none; background-color: #ffffff; }
+        .member-row td:first-child { padding-left: 32px; font-style: italic; }
+
         .leader-row-p2 { cursor: pointer; background-color: #ffffff !important; }
         .leader-row-p2:hover { background-color: #f8fafc !important; }
         .member-row-p2 { display: none; background-color: #ffffff !important; }
@@ -340,7 +359,7 @@
 
 <main class="main-wrapper">
 
-    <!-- VARIANCE ANALYSIS REPORT (PHASE 1) -->
+    <!-- VARIANCE ANALYSIS REPORT (PHASE 1 - LOCKED) -->
     <div id="variance-section" class="tab-content active">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -424,7 +443,7 @@
         </div>
     </div>
 
-    <!-- PROJECTION DASHBOARD (PHASE 2 - UN-CRAMPED EXPANDED DESIGN) -->
+    <!-- PROJECTION DASHBOARD (PHASE 2 - UPDATED CLEAN LAYOUT) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -471,7 +490,8 @@
                 </button>
             </div>
 
-            <div class="phase2-stack">
+            <!-- UPPER 2-COLUMN SPLIT -->
+            <div class="phase2-upper-split">
                 <div class="pivot-card">
                     <div class="pivot-title">
                         <span>Sum of SAR Amt</span>
@@ -515,7 +535,10 @@
                         </table>
                     </div>
                 </div>
+            </div>
 
+            <!-- LOWER FULL-WIDTH STACK -->
+            <div class="phase2-lower-stack">
                 <div class="pivot-card">
                     <div class="pivot-title">
                         <span>Sum of SAR Amt by Owner</span>
@@ -617,7 +640,8 @@
                 month: cleanMonthString(item.month),
                 normalizedWeek: getWeekKey(item.week),
                 entity: isValidEntity(item.entity) ? String(item.entity).trim() : "Unknown",
-                owner: cleanOwnerName(item.owner)
+                owner: cleanOwnerName(item.owner),
+                category: normalizeCategory(item.category)
             }));
 
             populateProjectionFilters();
@@ -782,11 +806,11 @@
         const projVariancePct = ((proj - act) / proj) * 100;
 
         if (proj < act) {
-            return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' }; // Red
+            return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' };
         } else if (projVariancePct >= 0 && projVariancePct <= 5.0) {
-            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' }; // Green (0% to 5%)
+            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' };
         } else {
-            return { text: 'OVER PROJECTED', cssClass: 'status-over' }; // Gray
+            return { text: 'OVER PROJECTED', cssClass: 'status-over' };
         }
     }
 
@@ -828,7 +852,6 @@
         }
     }
 
-    // TOGGLE FOR PHASE 2 OWNER TABLES
     function toggleLeaderGroupP2(leaderName) {
         const memberRows = document.querySelectorAll(`.team-p2-${leaderName}`);
         const icon = document.getElementById(`icon-p2-${leaderName}`);
