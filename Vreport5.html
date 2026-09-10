@@ -258,7 +258,7 @@
         .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-align: center; letter-spacing: 0.5px; }
         .status-over { background-color: #fdf2f2; color: var(--almosafer-coral); border: 1px solid #f8d7da; }
         .status-within { background-color: #e6f4f1; color: var(--almosafer-green); border: 1px solid #b2dfdb; }
-        .status-nobudget { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+        .status-nobudget { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
         .status-unbudgeted { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
 
         .tab-content { display: none; }
@@ -731,11 +731,24 @@
         return pct.toFixed(1) + "%";
     }
 
+    // UPDATED STATUS BADGE LOGIC
     function getStatusBadge(proj, act) {
-        if (proj === 0 && act === 0) return { text: 'NO BUDGET', cssClass: 'status-nobudget' };
-        if (proj === 0 && act > 0) return { text: 'UNBUDGETED', cssClass: 'status-unbudgeted' };
-        if (act > proj) return { text: 'OVER BUDGET', cssClass: 'status-over' };
-        return { text: 'WITHIN BUDGET', cssClass: 'status-within' };
+        if (proj === 0 && act === 0) {
+            return { text: 'NO ACTIVITY', cssClass: 'status-nobudget' };
+        }
+        if (proj === 0 && act > 0) {
+            return { text: 'UNBUDGETED', cssClass: 'status-unbudgeted' };
+        }
+
+        const variancePct = ((act - proj) / proj) * 100;
+
+        if (act > proj) {
+            return { text: 'OVER PROJECTED', cssClass: 'status-over' };
+        } else if (variancePct >= -2.0 && variancePct <= 0) {
+            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' };
+        } else {
+            return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' };
+        }
     }
 
     function getNativeEntityCurrency(entityStr) {
@@ -789,7 +802,6 @@
             const curr = String(item.currency || "SAR").toUpperCase().trim();
             if (!aggregated[key].byCurr[curr]) aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
 
-            // DIRECT UNTOUCHED SAR SUMMING: Reads sarAmt directly without conversion when in SAR mode
             const sarAmt = Number(item.sarAmt || 0);
             const localAmt = Number(item.localAmt || 0);
 
@@ -828,13 +840,14 @@
         const tbody = document.getElementById('tableBody');
         const tfoot = document.getElementById('tableFooter');
 
+        // REMOVED "/ Currency" AND RENAMED STATUS HEADER
         headerRow.innerHTML = `
-            <th>${groupBy === "Category" ? "Category / Currency" : "Entity / Currency"}</th>
+            <th>${groupBy === "Category" ? "Category" : "Entity"}</th>
             <th class="num-col">Projected Amount</th>
             <th class="num-col">Actual Amount</th>
             <th class="num-col">Difference</th>
             <th class="num-col">% Variance</th>
-            <th style="text-align: center;">Status</th>
+            <th style="text-align: center;">Projected Amount Status</th>
         `;
 
         tbody.innerHTML = '';
