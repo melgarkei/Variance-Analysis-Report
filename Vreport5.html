@@ -376,6 +376,7 @@
                     <select id="groupSelect" onchange="updateDashboard()">
                         <option value="Category" selected>Category (Default)</option>
                         <option value="Entity">Entity</option>
+                        <option value="Owner">Owner</option>
                     </select>
                 </div>
 
@@ -584,7 +585,8 @@
                 month: cleanMonthString(item.month),
                 category: normalizeCategory(item.category),
                 normalizedWeek: getWeekKey(item.week),
-                entity: isValidEntity(item.entity) ? String(item.entity).trim() : null
+                entity: isValidEntity(item.entity) ? String(item.entity).trim() : null,
+                owner: item.owner ? String(item.owner).trim() : "Unassigned"
             }));
 
             populateFilters();
@@ -731,6 +733,7 @@
         return pct.toFixed(1) + "%";
     }
 
+    // PROJECTED AMOUNT STATUS LOGIC
     function getStatusBadge(proj, act) {
         if (proj === 0 && act === 0) {
             return { text: 'NO ACTIVITY', cssClass: 'status-nobudget' };
@@ -739,14 +742,14 @@
             return { text: 'UNBUDGETED', cssClass: 'status-unbudgeted' };
         }
 
-        const variancePct = ((act - proj) / proj) * 100;
+        const projVariancePct = ((proj - act) / proj) * 100;
 
-        if (act > proj) {
-            return { text: 'OVER PROJECTED', cssClass: 'status-over' };
-        } else if (variancePct >= -2.0 && variancePct <= 0) {
+        if (proj < act) {
+            return { text: 'UNDER PROJECTED', cssClass: 'status-over' };
+        } else if (projVariancePct >= 0 && projVariancePct <= 2.0) {
             return { text: 'WITHIN PROJECTION', cssClass: 'status-within' };
         } else {
-            return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' };
+            return { text: 'OVER PROJECTED', cssClass: 'status-nobudget' };
         }
     }
 
@@ -786,8 +789,8 @@
             const matchWeek = (selWeek === "All") ? true : (d.normalizedWeek === selWeekKey || d.week === selWeek);
             const matchEntity = (selEntity === "All" || d.entity === selEntity);
             const matchCat = (selCat === "All" || d.category === selCat);
-            const isValidCat = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
-            return matchMonth && matchWeek && matchEntity && matchCat && isValidCat;
+            const isValidGroup = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
+            return matchMonth && matchWeek && matchEntity && matchCat && isValidGroup;
         });
 
         const aggregated = {};
@@ -796,7 +799,10 @@
         }
 
         filtered.forEach(item => {
-            const key = groupBy === "Category" ? item.category : item.entity;
+            let key = item.category;
+            if (groupBy === "Entity") key = item.entity || "Unknown";
+            if (groupBy === "Owner") key = item.owner || "Unassigned";
+
             if (!aggregated[key]) aggregated[key] = { projected: 0, actual: 0, byCurr: {} };
             const curr = String(item.currency || "SAR").toUpperCase().trim();
             if (!aggregated[key].byCurr[curr]) aggregated[key].byCurr[curr] = { projected: 0, actual: 0 };
@@ -804,11 +810,23 @@
             const sarAmt = Number(item.sarAmt || 0);
             const localAmt = Number(item.localAmt || 0);
 
+            // CALCULATE CONVERTED AMOUNTS IF FILTERED BY ENTITY IN LOCAL CURRENCY MODE
+            let effProj = sarAmt;
+            let effAct = sarAmt;
+
+            if (currMode === "Local" && selEntity !== "All") {
+                effProj = convertLocalToNativeEntityCurrency(localAmt, item.currency, selEntity);
+                effAct = convertLocalToNativeEntityCurrency(localAmt, item.currency, selEntity);
+            } else if (currMode === "Local" && selEntity === "All") {
+                effProj = localAmt;
+                effAct = localAmt;
+            }
+
             if (item.type === 'projection') {
-                aggregated[key].projected += (currMode === "SAR" || selEntity === "All") ? sarAmt : localAmt;
+                aggregated[key].projected += effProj;
                 aggregated[key].byCurr[curr].projected += localAmt;
             } else if (item.type === 'actual') {
-                aggregated[key].actual += (currMode === "SAR" || selEntity === "All") ? sarAmt : localAmt;
+                aggregated[key].actual += effAct;
                 aggregated[key].byCurr[curr].actual += localAmt;
             }
         });
@@ -840,7 +858,7 @@
         const tfoot = document.getElementById('tableFooter');
 
         headerRow.innerHTML = `
-            <th>${groupBy === "Category" ? "Category" : "Entity"}</th>
+            <th>${groupBy === "Category" ? "Category" : (groupBy === "Owner" ? "Owner" : "Entity")}</th>
             <th class="num-col">Projected Amount</th>
             <th class="num-col">Actual Amount</th>
             <th class="num-col">Difference</th>
@@ -866,14 +884,15 @@
             const catObj = aggregatedData[key];
             const proj = catObj.projected, act = catObj.actual, diff = proj - act;
 
-            if (currMode === "SAR" || selEntity === "All") {
+            if (currMode === "SAR" || selEntity !== "All") {
+                // RENDER DIRECT SUBTOTAL WITH ENTITY NATIVE CURRENCY IF FILTERED BY ENTITY
                 const badge = getStatusBadge(proj, act);
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${key}</b></td>
-                        <td class="num-col">${formatCurrency(proj, "SAR")}</td>
-                        <td class="num-col">${formatCurrency(act, "SAR")}</td>
-                        <td class="num-col">${formatCurrency(Math.abs(diff), "SAR")}</td>
+                        <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
+                        <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
+                        <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
                         <td class="num-col">${formatPercent(proj, act)}</td>
                         <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
                     </tr>`;
