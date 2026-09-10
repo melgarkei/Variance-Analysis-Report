@@ -241,9 +241,8 @@
         th { font-weight: 700; color: var(--almosafer-navy); padding: 8px 12px; border-bottom: 2px solid var(--almosafer-navy); background-color: #f8fafc; white-space: nowrap; }
         td { padding: 8px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; }
 
-        .cat-header-row td { font-weight: 700; background-color: #f1f5f9; color: var(--almosafer-navy); border-top: 1px solid #cbd5e1; }
-        .sub-curr-row td { padding-left: 24px; font-size: 12px; }
-        .entity-total-row td { font-weight: 700; background-color: #e6f7f9; color: var(--almosafer-navy); border-bottom: 2px solid #b2ebf2; }
+        .cat-header-row td { font-weight: 700; background-color: #e6f7f9; color: var(--almosafer-navy); border-top: 2px solid var(--almosafer-teal); border-bottom: 1px solid #b2ebf2; }
+        .sub-curr-row td { padding-left: 24px; font-size: 12px; background-color: #ffffff; }
 
         tfoot td, .grand-total-row td {
             font-weight: 800;
@@ -256,9 +255,9 @@
         .num-col { text-align: right; font-variant-numeric: tabular-nums; }
 
         .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-align: center; letter-spacing: 0.5px; }
-        .status-over { background-color: #fdf2f2; color: var(--almosafer-coral); border: 1px solid #f8d7da; }
+        .status-over { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; } /* OVER PROJECTED = Neutral */
         .status-within { background-color: #e6f4f1; color: var(--almosafer-green); border: 1px solid #b2dfdb; }
-        .status-nobudget { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .status-nobudget { background-color: #fdf2f2; color: var(--almosafer-coral); border: 1px solid #f8d7da; } /* UNDER PROJECTED = Red */
         .status-unbudgeted { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
 
         .tab-content { display: none; }
@@ -745,11 +744,11 @@
         const projVariancePct = ((proj - act) / proj) * 100;
 
         if (proj < act) {
-            return { text: 'UNDER PROJECTED', cssClass: 'status-over' };
+            return { text: 'UNDER PROJECTED', cssClass: 'status-nobudget' }; // Red
         } else if (projVariancePct >= 0 && projVariancePct <= 2.0) {
-            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' };
+            return { text: 'WITHIN PROJECTION', cssClass: 'status-within' }; // Green
         } else {
-            return { text: 'OVER PROJECTED', cssClass: 'status-nobudget' };
+            return { text: 'OVER PROJECTED', cssClass: 'status-over' }; // Gray
         }
     }
 
@@ -810,7 +809,6 @@
             const sarAmt = Number(item.sarAmt || 0);
             const localAmt = Number(item.localAmt || 0);
 
-            // CALCULATE CONVERTED AMOUNTS IF FILTERED BY ENTITY IN LOCAL CURRENCY MODE
             let effProj = sarAmt;
             let effAct = sarAmt;
 
@@ -884,35 +882,33 @@
             const catObj = aggregatedData[key];
             const proj = catObj.projected, act = catObj.actual, diff = proj - act;
 
-            if (currMode === "SAR" || selEntity !== "All") {
-                // RENDER DIRECT SUBTOTAL WITH ENTITY NATIVE CURRENCY IF FILTERED BY ENTITY
-                const badge = getStatusBadge(proj, act);
+            // Group Subtotal Row (Calculated in Target Currency)
+            const badge = getStatusBadge(proj, act);
+            tbody.innerHTML += `
+                <tr class="cat-header-row">
+                    <td><b>${key} (Subtotal)</b></td>
+                    <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
+                    <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
+                    <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
+                    <td class="num-col">${formatPercent(proj, act)}</td>
+                    <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                </tr>`;
+
+            // Native Currency Sub-Rows
+            const currencies = Object.keys(catObj.byCurr);
+            currencies.forEach(curr => {
+                const subProj = catObj.byCurr[curr].projected, subAct = catObj.byCurr[curr].actual, subDiff = subProj - subAct;
+                const subBadge = getStatusBadge(subProj, subAct);
                 tbody.innerHTML += `
-                    <tr>
-                        <td><b>${key}</b></td>
-                        <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
-                        <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
-                        <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
-                        <td class="num-col">${formatPercent(proj, act)}</td>
-                        <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                    <tr class="sub-curr-row">
+                        <td>${curr}</td>
+                        <td class="num-col">${formatCurrency(subProj, curr)}</td>
+                        <td class="num-col">${formatCurrency(subAct, curr)}</td>
+                        <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
+                        <td class="num-col">${formatPercent(subProj, subAct)}</td>
+                        <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
                     </tr>`;
-            } else {
-                tbody.innerHTML += `<tr class="cat-header-row"><td colspan="6"><b>${key}</b></td></tr>`;
-                const currencies = Object.keys(catObj.byCurr);
-                currencies.forEach(curr => {
-                    const subProj = catObj.byCurr[curr].projected, subAct = catObj.byCurr[curr].actual, subDiff = subProj - subAct;
-                    const subBadge = getStatusBadge(subProj, subAct);
-                    tbody.innerHTML += `
-                        <tr class="sub-curr-row">
-                            <td>${curr}</td>
-                            <td class="num-col">${formatCurrency(subProj, curr)}</td>
-                            <td class="num-col">${formatCurrency(subAct, curr)}</td>
-                            <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
-                            <td class="num-col">${formatPercent(subProj, subAct)}</td>
-                            <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
-                        </tr>`;
-                });
-            }
+            });
         });
 
         const totalDiffDisp = grandProjConverted - grandActConverted;
