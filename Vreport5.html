@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Almosafer Financial Comparison Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -264,11 +264,10 @@
         .member-row { display: none; background-color: #ffffff; }
         .member-row td:first-child { padding-left: 32px; font-style: italic; }
 
-        /* UNIFORM WHITE BACKGROUND FOR LEADER & MEMBER ROWS IN PHASE 2 */
-        .leader-row-p2 { cursor: pointer; background-color: #ffffff !important; }
-        .leader-row-p2:hover { background-color: #f8fafc !important; }
-        .member-row-p2 { display: none; background-color: #ffffff !important; }
-        .member-row-p2 td:first-child { padding-left: 32px; font-style: italic; }
+        .cat-parent-p2 { cursor: pointer; background-color: #ffffff !important; font-weight: 700; }
+        .cat-parent-p2:hover { background-color: #f8fafc !important; }
+        .owner-child-p2 { display: none; background-color: #ffffff !important; }
+        .owner-child-p2 td:first-child { padding-left: 32px; font-style: italic; }
 
         tfoot td, .grand-total-row td {
             font-weight: 800;
@@ -359,6 +358,7 @@
 
 <main class="main-wrapper">
 
+    <!-- VARIANCE ANALYSIS REPORT (PHASE 1 - LOCKED) -->
     <div id="variance-section" class="tab-content active">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -442,6 +442,7 @@
         </div>
     </div>
 
+    <!-- PROJECTION DASHBOARD (PHASE 2 - UPDATED CATEGORY TO OWNER HIERARCHY) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -488,7 +489,7 @@
                 </button>
             </div>
 
-            <!-- UPPER 2-COLUMN SPLIT: CATEGORY SAR AMT & OWNER SAR AMT -->
+            <!-- UPPER 2-COLUMN SPLIT -->
             <div class="phase2-upper-split">
                 <div class="pivot-card">
                     <div class="pivot-title">
@@ -514,14 +515,14 @@
 
                 <div class="pivot-card">
                     <div class="pivot-title">
-                        <span>Sum of SAR Amt by Owner</span>
-                        <span style="font-size: 11px; color: var(--text-secondary);">Click leader names to expand team members</span>
+                        <span>Sum of SAR Amt by Category & Owner</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Click categories to expand owners</span>
                     </div>
                     <div style="overflow-x: auto;">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Row Labels (Owner)</th>
+                                    <th>Row Labels (Category / Owner)</th>
                                     <th class="num-col">Sum of SAR Amt</th>
                                 </tr>
                             </thead>
@@ -532,7 +533,7 @@
                 </div>
             </div>
 
-            <!-- LOWER STACK: SUM AS PER DOC CURRENCY & OWNER BY CURRENCY -->
+            <!-- LOWER STACK -->
             <div class="phase2-lower-stack">
                 <div class="pivot-card">
                     <div class="pivot-title">
@@ -557,8 +558,8 @@
 
                 <div class="pivot-card">
                     <div class="pivot-title">
-                        <span>Sum of Projected Amount by Owner & Currency</span>
-                        <span style="font-size: 11px; color: var(--text-secondary);">Click leader names to expand team members</span>
+                        <span>Sum of Projected Amount by Category, Owner & Currency</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Click categories to expand owners</span>
                     </div>
                     <div style="overflow-x: auto;">
                         <table id="pTable4">
@@ -572,11 +573,12 @@
         </div>
     </div>
 
+    <!-- DAILY PAYMENT MODULE -->
     <div id="daily-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
                 <div class="page-title-text">Daily Payment Tracker</div>
-                <div class="brand-title-badge">Phase 3</div>
+                <div class="brand-title-badge">Phase 2</div>
             </div>
             <div class="placeholder-box">
                 <h3>Daily Payment Tracker Coming Soon</h3>
@@ -599,6 +601,7 @@
 
     let rawData = [];
     let rawDataPhase2 = [];
+    let rawWeekMap = {};
 
     const TEAM_STRUCTURE = {
         "Refaat": ["Mohamed Ashraf", "Elzek", "Israa"],
@@ -618,27 +621,39 @@
             }
 
             // Phase 1 Mapping
-            rawData = dataPhase1.map(item => ({
-                ...item,
-                month: cleanMonthString(item.month),
-                category: normalizeCategory(item.category),
-                normalizedWeek: getWeekKey(item.week),
-                entity: isValidEntity(item.entity) ? String(item.entity).trim() : null,
-                owner: cleanOwnerName(item.owner)
-            }));
+            rawData = dataPhase1.map(item => {
+                const normWeek = getWeekKey(item.week);
+                if (normWeek && item.week && String(item.week).length > normWeek.length && !rawWeekMap[normWeek]) {
+                    rawWeekMap[normWeek] = String(item.week).trim();
+                }
+                return {
+                    ...item,
+                    month: cleanMonthString(item.month),
+                    category: normalizeCategory(item.category),
+                    normalizedWeek: normWeek,
+                    entity: isValidEntity(item.entity) ? String(item.entity).trim() : null,
+                    owner: cleanOwnerName(item.owner)
+                };
+            });
 
             populateFilters();
             updateDashboard();
 
             // Phase 2 Mapping
-            rawDataPhase2 = dataPhase2.map(item => ({
-                ...item,
-                month: cleanMonthString(item.month),
-                normalizedWeek: getWeekKey(item.week),
-                entity: isValidEntity(item.entity) ? String(item.entity).trim() : "Unknown",
-                owner: cleanOwnerName(item.owner),
-                category: normalizeCategory(item.category)
-            }));
+            rawDataPhase2 = dataPhase2.map(item => {
+                const normWeek = getWeekKey(item.week);
+                if (normWeek && item.week && String(item.week).length > normWeek.length && !rawWeekMap[normWeek]) {
+                    rawWeekMap[normWeek] = String(item.week).trim();
+                }
+                return {
+                    ...item,
+                    month: cleanMonthString(item.month),
+                    normalizedWeek: normWeek,
+                    entity: isValidEntity(item.entity) ? String(item.entity).trim() : "Unknown",
+                    owner: cleanOwnerName(item.owner),
+                    category: normalizeCategory(item.category)
+                };
+            });
 
             populateProjectionFilters();
             updateProjectionDashboard();
@@ -736,9 +751,13 @@
         return numOnly ? "Week " + numOnly[1] : String(weekStr).trim();
     }
 
+    function formatWeekLabel(weekKey) {
+        return rawWeekMap[weekKey] || weekKey;
+    }
+
     function populateFilters() {
         populateDropdown('monthSelect', rawData.map(d => d.month), false);
-        populateDropdown('weekSelect', rawData.map(d => getWeekKey(d.week)), true);
+        populateDropdown('weekSelect', rawData.map(d => d.normalizedWeek), true);
         populateDropdown('entitySelect', rawData.map(d => d.entity), false);
         populateDropdown('categorySelect', MASTER_CATEGORIES, false);
     }
@@ -758,7 +777,7 @@
         unique.forEach(item => {
             const opt = document.createElement('option');
             opt.value = item;
-            opt.textContent = item;
+            opt.textContent = isWeek ? formatWeekLabel(item) : item;
             select.appendChild(opt);
         });
     }
@@ -848,9 +867,9 @@
         }
     }
 
-    function toggleLeaderGroupP2(leaderName) {
-        const memberRows = document.querySelectorAll(`.team-p2-${leaderName}`);
-        const icon = document.getElementById(`icon-p2-${leaderName}`);
+    function toggleCategoryGroupP2(catCleanId) {
+        const memberRows = document.querySelectorAll(`.cat-group-${catCleanId}`);
+        const icon = document.getElementById(`icon-cat-${catCleanId}`);
         let isOpening = false;
 
         memberRows.forEach(row => {
@@ -1103,12 +1122,13 @@
             </tr>`;
     }
 
+    // PHASE 2 FUNCTIONS
     function populateProjectionFilters() {
         populateDropdown('projMonthSelect', rawDataPhase2.map(d => d.month), false);
         populateDropdown('projEntitySelect', rawDataPhase2.map(d => d.entity), false);
 
         const container = document.getElementById('projWeekOptions');
-        const weeks = [...new Set(rawDataPhase2.map(d => d.normalizedWeek || d.week))].filter(Boolean);
+        const weeks = [...new Set(rawDataPhase2.map(d => d.normalizedWeek))].filter(Boolean);
         weeks.sort((a, b) => (parseInt(a.match(/\d+/) || 0) - parseInt(b.match(/\d+/) || 0)));
 
         container.innerHTML = '';
@@ -1117,7 +1137,7 @@
             div.className = 'multi-select-option';
             div.innerHTML = `
                 <input type="checkbox" class="proj-week-cb" value="${w}" id="cb_${w}" checked onchange="onWeekCbChange()" />
-                <label for="cb_${w}" style="text-transform: none;">${w}</label>
+                <label for="cb_${w}" style="text-transform: none;">${formatWeekLabel(w)}</label>
             `;
             container.appendChild(div);
         });
@@ -1182,7 +1202,6 @@
         tfoot.innerHTML = `<tr class="grand-total-row"><td>Grand Total</td><td class="num-col">${formatNumber(colTotals.Saudia)}</td><td class="num-col">${formatNumber(colTotals.Emirates)}</td><td class="num-col">${formatNumber(colTotals.Kuwait)}</td><td class="num-col">${formatNumber(colTotals.Total)}</td></tr>`;
     }
 
-    // PIVOT TABLE 2: SUM AS PER DOC CURRENCY (REMOVED GRAND TOTAL FOOTER ROW)
     function renderPivotTable2(data) {
         const tbody = document.getElementById('pTable2Body');
         const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
@@ -1204,127 +1223,114 @@
         });
     }
 
+    // PIVOT TABLE 3: CATEGORY (PARENT) -> OWNER (CHILD) HIERARCHY
     function renderPivotTable3(data) {
         const tbody = document.getElementById('pTable3Body');
         const tfoot = document.getElementById('pTable3Foot');
-        const ownerTotals = {};
+        const catOwnerMatrix = {};
         let grandTotal = 0;
 
+        MASTER_CATEGORIES.forEach(cat => catOwnerMatrix[cat] = { total: 0, owners: {} });
+
         data.forEach(d => {
-            const owner = d.owner;
-            if (!owner) return;
+            const cat = d.category;
+            const owner = d.owner || "Unassigned";
             const sar = Number(d.sarAmt || 0);
-            if (!ownerTotals[owner]) ownerTotals[owner] = 0;
-            ownerTotals[owner] += sar; 
-            grandTotal += sar;
+
+            if (catOwnerMatrix[cat]) {
+                catOwnerMatrix[cat].total += sar;
+                if (!catOwnerMatrix[cat].owners[owner]) catOwnerMatrix[cat].owners[owner] = 0;
+                catOwnerMatrix[cat].owners[owner] += sar;
+                grandTotal += sar;
+            }
         });
 
         tbody.innerHTML = '';
-        const renderedOwners = new Set();
-
-        Object.keys(TEAM_STRUCTURE).forEach(leader => {
-            const members = TEAM_STRUCTURE[leader];
-            let leaderTotal = ownerTotals[leader] || 0;
-            members.forEach(m => { leaderTotal += (ownerTotals[m] || 0); });
+        MASTER_CATEGORIES.forEach(cat => {
+            const catCleanId = cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const catTotal = catOwnerMatrix[cat].total;
+            const owners = catOwnerMatrix[cat].owners;
 
             tbody.innerHTML += `
-                <tr class="leader-row-p2" onclick="toggleLeaderGroupP2('${leader}')">
-                    <td><b><span id="icon-p2-${leader}" style="margin-right:8px;">▶</span>${leader}</b></td>
-                    <td class="num-col"><b>${formatNumber(leaderTotal)}</b></td>
+                <tr class="cat-parent-p2" onclick="toggleCategoryGroupP2('${catCleanId}')">
+                    <td><b><span id="icon-cat-${catCleanId}" style="margin-right:8px;">▶</span>${cat}</b></td>
+                    <td class="num-col"><b>${formatNumber(catTotal)}</b></td>
                 </tr>`;
-            renderedOwners.add(leader);
 
-            members.forEach(m => {
-                const val = ownerTotals[m] || 0;
+            Object.keys(owners).sort().forEach(owner => {
+                const ownerVal = owners[owner];
                 tbody.innerHTML += `
-                    <tr class="member-row-p2 team-p2-${leader}">
-                        <td>↳ ${m}</td>
-                        <td class="num-col">${formatNumber(val)}</td>
+                    <tr class="owner-child-p2 cat-group-${catCleanId}">
+                        <td>↳ ${owner}</td>
+                        <td class="num-col">${formatNumber(ownerVal)}</td>
                     </tr>`;
-                renderedOwners.add(m);
             });
-        });
-
-        Object.keys(ownerTotals).sort().forEach(owner => {
-            if (!renderedOwners.has(owner) && owner !== "null" && owner !== "#N/A") {
-                tbody.innerHTML += `<tr><td><b>${owner}</b></td><td class="num-col">${formatNumber(ownerTotals[owner])}</td></tr>`;
-            }
         });
 
         tfoot.innerHTML = `<tr class="grand-total-row"><td>Grand Total</td><td class="num-col">${formatNumber(grandTotal)}</td></tr>`;
     }
 
+    // PIVOT TABLE 4: CATEGORY (PARENT) -> OWNER (CHILD) BY CURRENCY
     function renderPivotTable4(data) {
         const thead = document.getElementById('pTable4Head');
         const tbody = document.getElementById('pTable4Body');
         const tfoot = document.getElementById('pTable4Foot');
         const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
 
-        let headHtml = `<tr><th>Row Labels (Owner)</th>`;
+        let headHtml = `<tr><th>Row Labels (Category / Owner)</th>`;
         currencies.forEach(c => { headHtml += `<th class="num-col">${c}</th>`; });
         headHtml += `<th class="num-col">Grand Total</th></tr>`;
         thead.innerHTML = headHtml;
 
-        const matrix = {}, colTotals = {};
+        const catOwnerCurrMatrix = {};
+        const colTotals = {};
         currencies.forEach(c => colTotals[c] = 0);
         let grandTotalAll = 0;
 
+        MASTER_CATEGORIES.forEach(cat => {
+            catOwnerCurrMatrix[cat] = { total: 0, byCurr: {}, owners: {} };
+            currencies.forEach(c => catOwnerCurrMatrix[cat].byCurr[c] = 0);
+        });
+
         data.forEach(d => {
-            const owner = d.owner;
-            if (!owner) return;
+            const cat = d.category;
+            const owner = d.owner || "Unassigned";
             const curr = String(d.currency || "SAR").toUpperCase();
             const amt = Number(d.projectedAmt || d.localAmt || 0);
 
-            if (!matrix[owner]) {
-                matrix[owner] = { Total: 0 };
-                currencies.forEach(c => matrix[owner][c] = 0);
+            if (catOwnerCurrMatrix[cat]) {
+                catOwnerCurrMatrix[cat].total += amt;
+                catOwnerCurrMatrix[cat].byCurr[curr] = (catOwnerCurrMatrix[cat].byCurr[curr] || 0) + amt;
+
+                if (!catOwnerCurrMatrix[cat].owners[owner]) {
+                    catOwnerCurrMatrix[cat].owners[owner] = { total: 0 };
+                    currencies.forEach(c => catOwnerCurrMatrix[cat].owners[owner][c] = 0);
+                }
+                catOwnerCurrMatrix[cat].owners[owner][curr] = (catOwnerCurrMatrix[cat].owners[owner][curr] || 0) + amt;
+                catOwnerCurrMatrix[cat].owners[owner].total += amt;
+
+                colTotals[curr] += amt;
+                grandTotalAll += amt;
             }
-            matrix[owner][curr] += amt; 
-            matrix[owner].Total += amt;
-            colTotals[curr] += amt; 
-            grandTotalAll += amt;
         });
 
         tbody.innerHTML = '';
-        const renderedOwners = new Set();
+        MASTER_CATEGORIES.forEach(cat => {
+            const catCleanId = 't4_' + cat.replace(/[^a-zA-Z0-9]/g, '_');
+            const catData = catOwnerCurrMatrix[cat];
 
-        Object.keys(TEAM_STRUCTURE).forEach(leader => {
-            const members = TEAM_STRUCTURE[leader];
-            const leaderRow = { Total: matrix[leader] ? matrix[leader].Total : 0 };
-            currencies.forEach(c => { leaderRow[c] = matrix[leader] ? matrix[leader][c] : 0; });
-
-            members.forEach(m => {
-                if (matrix[m]) {
-                    leaderRow.Total += matrix[m].Total;
-                    currencies.forEach(c => { leaderRow[c] += matrix[m][c]; });
-                }
-            });
-
-            let rowHtml = `<tr class="leader-row-p2" onclick="toggleLeaderGroupP2('table4_${leader}')"><td><b><span id="icon-p2-table4_${leader}" style="margin-right:8px;">▶</span>${leader}</b></td>`;
-            currencies.forEach(c => { rowHtml += `<td class="num-col"><b>${formatNumber(leaderRow[c])}</b></td>`; });
-            rowHtml += `<td class="num-col"><b>${formatNumber(leaderRow.Total)}</b></td></tr>`;
+            let rowHtml = `<tr class="cat-parent-p2" onclick="toggleCategoryGroupP2('${catCleanId}')"><td><b><span id="icon-cat-${catCleanId}" style="margin-right:8px;">▶</span>${cat}</b></td>`;
+            currencies.forEach(c => { rowHtml += `<td class="num-col"><b>${formatNumber(catData.byCurr[c])}</b></td>`; });
+            rowHtml += `<td class="num-col"><b>${formatNumber(catData.total)}</b></td></tr>`;
             tbody.innerHTML += rowHtml;
-            renderedOwners.add(leader);
 
-            members.forEach(m => {
-                const mRow = matrix[m] || { Total: 0 };
-                currencies.forEach(c => { if (mRow[c] === undefined) mRow[c] = 0; });
-
-                let mHtml = `<tr class="member-row-p2 team-p2-table4_${leader}"><td>↳ ${m}</td>`;
-                currencies.forEach(c => { mHtml += `<td class="num-col">${formatNumber(mRow[c])}</td>`; });
-                mHtml += `<td class="num-col">${formatNumber(mRow.Total)}</td></tr>`;
-                tbody.innerHTML += mHtml;
-                renderedOwners.add(m);
+            Object.keys(catData.owners).sort().forEach(owner => {
+                const ownerData = catData.owners[owner];
+                let oHtml = `<tr class="owner-child-p2 cat-group-${catCleanId}"><td>↳ ${owner}</td>`;
+                currencies.forEach(c => { oHtml += `<td class="num-col">${formatNumber(ownerData[c])}</td>`; });
+                oHtml += `<td class="num-col">${formatNumber(ownerData.total)}</td></tr>`;
+                tbody.innerHTML += oHtml;
             });
-        });
-
-        Object.keys(matrix).sort().forEach(owner => {
-            if (!renderedOwners.has(owner) && owner !== "null" && owner !== "#N/A") {
-                let rowHtml = `<tr><td><b>${owner}</b></td>`;
-                currencies.forEach(c => { rowHtml += `<td class="num-col">${formatNumber(matrix[owner][c])}</td>`; });
-                rowHtml += `<td class="num-col"><b>${formatNumber(matrix[owner].Total)}</b></td></tr>`;
-                tbody.innerHTML += rowHtml;
-            }
         });
 
         let footHtml = `<tr class="grand-total-row"><td>Grand Total</td>`;
