@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Almosafer Financial Comparison Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -214,7 +214,6 @@
             margin-bottom: 16px;
         }
 
-        /* PHASE 2 FLEX & GRID STYLING */
         .phase2-upper-split {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -265,6 +264,7 @@
         .member-row { display: none; background-color: #ffffff; }
         .member-row td:first-child { padding-left: 32px; font-style: italic; }
 
+        /* UNIFORM WHITE BACKGROUND FOR LEADER & MEMBER ROWS IN PHASE 2 */
         .leader-row-p2 { cursor: pointer; background-color: #ffffff !important; }
         .leader-row-p2:hover { background-color: #f8fafc !important; }
         .member-row-p2 { display: none; background-color: #ffffff !important; }
@@ -359,7 +359,6 @@
 
 <main class="main-wrapper">
 
-    <!-- VARIANCE ANALYSIS REPORT (PHASE 1 - LOCKED) -->
     <div id="variance-section" class="tab-content active">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -443,7 +442,6 @@
         </div>
     </div>
 
-    <!-- PROJECTION DASHBOARD (PHASE 2 - UPDATED CLEAN LAYOUT) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -490,7 +488,7 @@
                 </button>
             </div>
 
-            <!-- UPPER 2-COLUMN SPLIT -->
+            <!-- UPPER 2-COLUMN SPLIT: CATEGORY SAR AMT & OWNER SAR AMT -->
             <div class="phase2-upper-split">
                 <div class="pivot-card">
                     <div class="pivot-title">
@@ -516,7 +514,29 @@
 
                 <div class="pivot-card">
                     <div class="pivot-title">
-                        <span>Sum of Projected Amount</span>
+                        <span>Sum of SAR Amt by Owner</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Click leader names to expand team members</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Row Labels (Owner)</th>
+                                    <th class="num-col">Sum of SAR Amt</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pTable3Body"><tr><td colspan="2" class="loading-state">Loading...</td></tr></tbody>
+                            <tfoot id="pTable3Foot"></tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOWER STACK: SUM AS PER DOC CURRENCY & OWNER BY CURRENCY -->
+            <div class="phase2-lower-stack">
+                <div class="pivot-card">
+                    <div class="pivot-title">
+                        <span>Sum as per Doc Currency</span>
                         <span style="font-size: 11px; color: var(--text-secondary);">Column Labels: Entity</span>
                     </div>
                     <div style="overflow-x: auto;">
@@ -531,29 +551,6 @@
                                 </tr>
                             </thead>
                             <tbody id="pTable2Body"><tr><td colspan="5" class="loading-state">Loading...</td></tr></tbody>
-                            <tfoot id="pTable2Foot"></tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- LOWER FULL-WIDTH STACK -->
-            <div class="phase2-lower-stack">
-                <div class="pivot-card">
-                    <div class="pivot-title">
-                        <span>Sum of SAR Amt by Owner</span>
-                        <span style="font-size: 11px; color: var(--text-secondary);">Click leader names to expand team members</span>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Row Labels (Owner)</th>
-                                    <th class="num-col">Sum of SAR Amt</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pTable3Body"><tr><td colspan="2" class="loading-state">Loading...</td></tr></tbody>
-                            <tfoot id="pTable3Foot"></tfoot>
                         </table>
                     </div>
                 </div>
@@ -575,12 +572,11 @@
         </div>
     </div>
 
-    <!-- DAILY PAYMENT MODULE -->
     <div id="daily-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
                 <div class="page-title-text">Daily Payment Tracker</div>
-                <div class="brand-title-badge">Phase 2</div>
+                <div class="brand-title-badge">Phase 3</div>
             </div>
             <div class="placeholder-box">
                 <h3>Daily Payment Tracker Coming Soon</h3>
@@ -1107,7 +1103,6 @@
             </tr>`;
     }
 
-    // PHASE 2 FUNCTIONS
     function populateProjectionFilters() {
         populateDropdown('projMonthSelect', rawDataPhase2.map(d => d.month), false);
         populateDropdown('projEntitySelect', rawDataPhase2.map(d => d.entity), false);
@@ -1187,9 +1182,9 @@
         tfoot.innerHTML = `<tr class="grand-total-row"><td>Grand Total</td><td class="num-col">${formatNumber(colTotals.Saudia)}</td><td class="num-col">${formatNumber(colTotals.Emirates)}</td><td class="num-col">${formatNumber(colTotals.Kuwait)}</td><td class="num-col">${formatNumber(colTotals.Total)}</td></tr>`;
     }
 
+    // PIVOT TABLE 2: SUM AS PER DOC CURRENCY (REMOVED GRAND TOTAL FOOTER ROW)
     function renderPivotTable2(data) {
         const tbody = document.getElementById('pTable2Body');
-        const tfoot = document.getElementById('pTable2Foot');
         const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
         const matrix = {};
         const colTotals = { Saudia: 0, Emirates: 0, Kuwait: 0, Total: 0 };
@@ -1207,7 +1202,6 @@
         currencies.forEach(curr => {
             tbody.innerHTML += `<tr><td><b>${curr}</b></td><td class="num-col">${formatNumber(matrix[curr].Saudia)}</td><td class="num-col">${formatNumber(matrix[curr].Emirates)}</td><td class="num-col">${formatNumber(matrix[curr].Kuwait)}</td><td class="num-col"><b>${formatNumber(matrix[curr].Total)}</b></td></tr>`;
         });
-        tfoot.innerHTML = `<tr class="grand-total-row"><td>Grand Total</td><td class="num-col">${formatNumber(colTotals.Saudia)}</td><td class="num-col">${formatNumber(colTotals.Emirates)}</td><td class="num-col">${formatNumber(colTotals.Kuwait)}</td><td class="num-col">${formatNumber(colTotals.Total)}</td></tr>`;
     }
 
     function renderPivotTable3(data) {
