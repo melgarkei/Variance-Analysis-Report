@@ -253,8 +253,8 @@
         }
 
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-        th { font-weight: 700; color: var(--almosafer-navy); padding: 10px 12px; border-bottom: 2px solid var(--almosafer-navy); background-color: #f8fafc; white-space: nowrap; }
-        td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; }
+        th { font-weight: 700; color: var(--almosafer-navy); padding: 8px 10px; border-bottom: 2px solid var(--almosafer-navy); background-color: #f8fafc; white-space: nowrap; }
+        td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; font-weight: 400; }
 
         .cat-header-row td { font-weight: 700; background-color: #f1f5f9; color: var(--almosafer-navy); border-top: 1px solid #cbd5e1; }
         .sub-curr-row td { padding-left: 24px; font-size: 12px; background-color: #ffffff; }
@@ -264,7 +264,7 @@
         .member-row { display: none; background-color: #ffffff; }
         .member-row td:first-child { padding-left: 32px; font-style: italic; }
 
-        .cat-parent-p2 { cursor: pointer; background-color: #ffffff !important; font-weight: 700; }
+        .cat-parent-p2 { cursor: pointer; background-color: #ffffff !important; font-weight: 600; }
         .cat-parent-p2:hover { background-color: #f8fafc !important; }
         .owner-child-p2 { display: none; background-color: #ffffff !important; }
         .owner-child-p2 td:first-child { padding-left: 32px; font-style: italic; }
@@ -442,7 +442,7 @@
         </div>
     </div>
 
-    <!-- PROJECTION DASHBOARD (PHASE 2 - UPDATED CATEGORY TO OWNER HIERARCHY) -->
+    <!-- PROJECTION DASHBOARD (PHASE 2) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -563,9 +563,8 @@
                     </div>
                     <div style="overflow-x: auto;">
                         <table id="pTable4">
-                            <thead id="pTable4Head"><tr><th>Row Labels</th></tr></thead>
+                            <thead id="pTable4Head"><tr><th>Row Labels (Category / Owner)</th></tr></thead>
                             <tbody id="pTable4Body"><tr><td colspan="1" class="loading-state">Loading...</td></tr></tbody>
-                            <tfoot id="pTable4Foot"></tfoot>
                         </table>
                     </div>
                 </div>
@@ -1253,8 +1252,8 @@
 
             tbody.innerHTML += `
                 <tr class="cat-parent-p2" onclick="toggleCategoryGroupP2('${catCleanId}')">
-                    <td><b><span id="icon-cat-${catCleanId}" style="margin-right:8px;">▶</span>${cat}</b></td>
-                    <td class="num-col"><b>${formatNumber(catTotal)}</b></td>
+                    <td><span id="icon-cat-${catCleanId}" style="margin-right:8px;">▶</span>${cat}</td>
+                    <td class="num-col">${formatNumber(catTotal)}</td>
                 </tr>`;
 
             Object.keys(owners).sort().forEach(owner => {
@@ -1270,25 +1269,21 @@
         tfoot.innerHTML = `<tr class="grand-total-row"><td>Grand Total</td><td class="num-col">${formatNumber(grandTotal)}</td></tr>`;
     }
 
-    // PIVOT TABLE 4: CATEGORY (PARENT) -> OWNER (CHILD) BY CURRENCY
+    // PIVOT TABLE 4: CATEGORY (PARENT) -> OWNER (CHILD) BY CURRENCY (NO GRAND TOTAL ROW OR COLUMN)
     function renderPivotTable4(data) {
         const thead = document.getElementById('pTable4Head');
         const tbody = document.getElementById('pTable4Body');
-        const tfoot = document.getElementById('pTable4Foot');
         const currencies = [...new Set(data.map(d => String(d.currency || "SAR").toUpperCase()))].sort();
 
         let headHtml = `<tr><th>Row Labels (Category / Owner)</th>`;
         currencies.forEach(c => { headHtml += `<th class="num-col">${c}</th>`; });
-        headHtml += `<th class="num-col">Grand Total</th></tr>`;
+        headHtml += `</tr>`;
         thead.innerHTML = headHtml;
 
         const catOwnerCurrMatrix = {};
-        const colTotals = {};
-        currencies.forEach(c => colTotals[c] = 0);
-        let grandTotalAll = 0;
 
         MASTER_CATEGORIES.forEach(cat => {
-            catOwnerCurrMatrix[cat] = { total: 0, byCurr: {}, owners: {} };
+            catOwnerCurrMatrix[cat] = { byCurr: {}, owners: {} };
             currencies.forEach(c => catOwnerCurrMatrix[cat].byCurr[c] = 0);
         });
 
@@ -1299,18 +1294,13 @@
             const amt = Number(d.projectedAmt || d.localAmt || 0);
 
             if (catOwnerCurrMatrix[cat]) {
-                catOwnerCurrMatrix[cat].total += amt;
                 catOwnerCurrMatrix[cat].byCurr[curr] = (catOwnerCurrMatrix[cat].byCurr[curr] || 0) + amt;
 
                 if (!catOwnerCurrMatrix[cat].owners[owner]) {
-                    catOwnerCurrMatrix[cat].owners[owner] = { total: 0 };
+                    catOwnerCurrMatrix[cat].owners[owner] = {};
                     currencies.forEach(c => catOwnerCurrMatrix[cat].owners[owner][c] = 0);
                 }
                 catOwnerCurrMatrix[cat].owners[owner][curr] = (catOwnerCurrMatrix[cat].owners[owner][curr] || 0) + amt;
-                catOwnerCurrMatrix[cat].owners[owner].total += amt;
-
-                colTotals[curr] += amt;
-                grandTotalAll += amt;
             }
         });
 
@@ -1319,24 +1309,19 @@
             const catCleanId = 't4_' + cat.replace(/[^a-zA-Z0-9]/g, '_');
             const catData = catOwnerCurrMatrix[cat];
 
-            let rowHtml = `<tr class="cat-parent-p2" onclick="toggleCategoryGroupP2('${catCleanId}')"><td><b><span id="icon-cat-${catCleanId}" style="margin-right:8px;">▶</span>${cat}</b></td>`;
-            currencies.forEach(c => { rowHtml += `<td class="num-col"><b>${formatNumber(catData.byCurr[c])}</b></td>`; });
-            rowHtml += `<td class="num-col"><b>${formatNumber(catData.total)}</b></td></tr>`;
+            let rowHtml = `<tr class="cat-parent-p2" onclick="toggleCategoryGroupP2('${catCleanId}')"><td><span id="icon-cat-${catCleanId}" style="margin-right:8px;">▶</span>${cat}</td>`;
+            currencies.forEach(c => { rowHtml += `<td class="num-col">${formatNumber(catData.byCurr[c])}</td>`; });
+            rowHtml += `</tr>`;
             tbody.innerHTML += rowHtml;
 
             Object.keys(catData.owners).sort().forEach(owner => {
                 const ownerData = catData.owners[owner];
                 let oHtml = `<tr class="owner-child-p2 cat-group-${catCleanId}"><td>↳ ${owner}</td>`;
                 currencies.forEach(c => { oHtml += `<td class="num-col">${formatNumber(ownerData[c])}</td>`; });
-                oHtml += `<td class="num-col">${formatNumber(ownerData.total)}</td></tr>`;
+                oHtml += `</tr>`;
                 tbody.innerHTML += oHtml;
             });
         });
-
-        let footHtml = `<tr class="grand-total-row"><td>Grand Total</td>`;
-        currencies.forEach(c => { footHtml += `<td class="num-col">${formatNumber(colTotals[c])}</td>`; });
-        footHtml += `<td class="num-col">${formatNumber(grandTotalAll)}</td></tr>`;
-        tfoot.innerHTML = footHtml;
     }
 
     window.onclick = function(event) {
