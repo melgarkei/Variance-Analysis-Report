@@ -264,6 +264,11 @@
         .member-row { display: none; background-color: #ffffff; }
         .member-row td:first-child { padding-left: 32px; font-style: italic; }
 
+        .leader-row-p2 { cursor: pointer; background-color: #ffffff !important; font-weight: 600; }
+        .leader-row-p2:hover { background-color: #f8fafc !important; }
+        .member-row-p2 { display: none; background-color: #ffffff !important; }
+        .member-row-p2 td:first-child { padding-left: 32px; font-style: italic; }
+
         .cat-parent-p2 { cursor: pointer; background-color: #ffffff !important; font-weight: 600; }
         .cat-parent-p2:hover { background-color: #f8fafc !important; }
         .owner-child-p2 { display: none; background-color: #ffffff !important; }
@@ -515,14 +520,14 @@
 
                 <div class="pivot-card">
                     <div class="pivot-title">
-                        <span>Sum of SAR Amt by Category & Owner</span>
-                        <span style="font-size: 11px; color: var(--text-secondary);">Click categories to expand owners</span>
+                        <span>Sum of SAR Amt by Owner</span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Click leader names to expand team members</span>
                     </div>
                     <div style="overflow-x: auto;">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Row Labels (Category / Owner)</th>
+                                    <th>Row Labels (Owner)</th>
                                     <th class="num-col">Sum of SAR Amt</th>
                                 </tr>
                             </thead>
@@ -850,6 +855,25 @@
     function toggleLeaderGroup(leaderName) {
         const memberRows = document.querySelectorAll(`.team-${leaderName}`);
         const icon = document.getElementById(`icon-${leaderName}`);
+        let isOpening = false;
+
+        memberRows.forEach(row => {
+            if (row.style.display === "table-row") {
+                row.style.display = "none";
+            } else {
+                row.style.display = "table-row";
+                isOpening = true;
+            }
+        });
+
+        if (icon) {
+            icon.textContent = isOpening ? "▼" : "▶";
+        }
+    }
+
+    function toggleLeaderGroupP2(leaderName) {
+        const memberRows = document.querySelectorAll(`.team-p2-${leaderName}`);
+        const icon = document.getElementById(`icon-p2-${leaderName}`);
         let isOpening = false;
 
         memberRows.forEach(row => {
@@ -1222,48 +1246,52 @@
         });
     }
 
-    // PIVOT TABLE 3: CATEGORY (PARENT) -> OWNER (CHILD) HIERARCHY
+    // PIVOT TABLE 3: SUM OF SAR AMT BY OWNER (COLLAPSIBLE TEAMS FOR REFAAT & HOSSAM)
     function renderPivotTable3(data) {
         const tbody = document.getElementById('pTable3Body');
         const tfoot = document.getElementById('pTable3Foot');
-        const catOwnerMatrix = {};
+        const ownerTotals = {};
         let grandTotal = 0;
 
-        MASTER_CATEGORIES.forEach(cat => catOwnerMatrix[cat] = { total: 0, owners: {} });
-
         data.forEach(d => {
-            const cat = d.category;
-            const owner = d.owner || "Unassigned";
+            const owner = d.owner;
+            if (!owner) return;
             const sar = Number(d.sarAmt || 0);
-
-            if (catOwnerMatrix[cat]) {
-                catOwnerMatrix[cat].total += sar;
-                if (!catOwnerMatrix[cat].owners[owner]) catOwnerMatrix[cat].owners[owner] = 0;
-                catOwnerMatrix[cat].owners[owner] += sar;
-                grandTotal += sar;
-            }
+            if (!ownerTotals[owner]) ownerTotals[owner] = 0;
+            ownerTotals[owner] += sar;
+            grandTotal += sar;
         });
 
         tbody.innerHTML = '';
-        MASTER_CATEGORIES.forEach(cat => {
-            const catCleanId = cat.replace(/[^a-zA-Z0-9]/g, '_');
-            const catTotal = catOwnerMatrix[cat].total;
-            const owners = catOwnerMatrix[cat].owners;
+        const renderedOwners = new Set();
+
+        Object.keys(TEAM_STRUCTURE).forEach(leader => {
+            const members = TEAM_STRUCTURE[leader];
+            let leaderTotal = ownerTotals[leader] || 0;
+            members.forEach(m => { leaderTotal += (ownerTotals[m] || 0); });
 
             tbody.innerHTML += `
-                <tr class="cat-parent-p2" onclick="toggleCategoryGroupP2('${catCleanId}')">
-                    <td><span id="icon-cat-${catCleanId}" style="margin-right:8px;">▶</span>${cat}</td>
-                    <td class="num-col">${formatNumber(catTotal)}</td>
+                <tr class="leader-row-p2" onclick="toggleLeaderGroupP2('${leader}')">
+                    <td><b><span id="icon-p2-${leader}" style="margin-right:8px;">▶</span>${leader}</b></td>
+                    <td class="num-col"><b>${formatNumber(leaderTotal)}</b></td>
                 </tr>`;
+            renderedOwners.add(leader);
 
-            Object.keys(owners).sort().forEach(owner => {
-                const ownerVal = owners[owner];
+            members.forEach(m => {
+                const val = ownerTotals[m] || 0;
                 tbody.innerHTML += `
-                    <tr class="owner-child-p2 cat-group-${catCleanId}">
-                        <td>↳ ${owner}</td>
-                        <td class="num-col">${formatNumber(ownerVal)}</td>
+                    <tr class="member-row-p2 team-p2-${leader}">
+                        <td>↳ ${m}</td>
+                        <td class="num-col">${formatNumber(val)}</td>
                     </tr>`;
+                renderedOwners.add(m);
             });
+        });
+
+        Object.keys(ownerTotals).sort().forEach(owner => {
+            if (!renderedOwners.has(owner) && owner !== "null" && owner !== "#N/A") {
+                tbody.innerHTML += `<tr><td><b>${owner}</b></td><td class="num-col">${formatNumber(ownerTotals[owner])}</td></tr>`;
+            }
         });
 
         tfoot.innerHTML = `<tr class="grand-total-row"><td>Grand Total</td><td class="num-col">${formatNumber(grandTotal)}</td></tr>`;
