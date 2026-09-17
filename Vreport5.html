@@ -138,6 +138,26 @@
             letter-spacing: 0.5px;
         }
 
+        .btn-print {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background-color: var(--almosafer-teal);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 168, 181, 0.3);
+        }
+
+        .btn-print:hover {
+            background-color: #008c99;
+        }
+
         .controls-container {
             display: flex;
             gap: 12px;
@@ -334,6 +354,16 @@
         .multi-select-dropdown.show { display: block; }
         .multi-select-option { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12px; cursor: pointer; border-radius: 4px; }
         .multi-select-option:hover { background-color: #f1f5f9; }
+
+        /* PRINT STYLES FOR PHASE 2 PDF EXPORT */
+        @media print {
+            body { background-color: #ffffff !important; }
+            .sidebar, .controls-container, .btn-print, #variance-section, #daily-section { display: none !important; }
+            .main-wrapper { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
+            .dashboard-card { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+            .pivot-card { page-break-inside: avoid; border: 1px solid #cbd5e1 !important; margin-bottom: 20px !important; }
+            .member-row-p2, .owner-child-p2 { display: table-row !important; }
+        }
     </style>
 </head>
 <body>
@@ -447,12 +477,18 @@
         </div>
     </div>
 
-    <!-- PROJECTION DASHBOARD (PHASE 2) -->
+    <!-- PROJECTION DASHBOARD (PHASE 2 - WITH PDF PRINT BUTTON) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
                 <div class="page-title-text">Projection</div>
-                <div class="brand-title-badge">Copy of Monthly Projection 2026</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="btn-print" onclick="window.print()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v6H6z"/></svg>
+                        Print PDF
+                    </button>
+                    <div class="brand-title-badge">Copy of Monthly Projection 2026</div>
+                </div>
             </div>
 
             <div class="controls-container">
