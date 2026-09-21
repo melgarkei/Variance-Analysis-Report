@@ -138,6 +138,13 @@
             letter-spacing: 0.5px;
         }
 
+        .print-week-badge {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--almosafer-teal);
+            margin-top: 4px;
+        }
+
         .btn-print {
             padding: 8px 16px;
             border-radius: 20px;
@@ -154,9 +161,7 @@
             box-shadow: 0 2px 6px rgba(0, 168, 181, 0.3);
         }
 
-        .btn-print:hover {
-            background-color: #008c99;
-        }
+        .btn-print:hover { background-color: #008c99; }
 
         .controls-container {
             display: flex;
@@ -363,6 +368,7 @@
             .dashboard-card { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
             .pivot-card { page-break-inside: avoid; border: 1px solid #cbd5e1 !important; margin-bottom: 20px !important; }
             .member-row-p2, .owner-child-p2 { display: table-row !important; }
+            .print-week-badge { display: block !important; font-size: 14px !important; color: #002b3a !important; margin-top: 6px !important; }
         }
     </style>
 </head>
@@ -477,11 +483,14 @@
         </div>
     </div>
 
-    <!-- PROJECTION DASHBOARD (PHASE 2 - WITH PDF PRINT BUTTON) -->
+    <!-- PROJECTION DASHBOARD (PHASE 2 - PRINT WITH WEEK HEADER) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
-                <div class="page-title-text">Projection</div>
+                <div>
+                    <div class="page-title-text">Projection</div>
+                    <div class="print-week-badge" id="projPrintWeekHeader">Filtered Period: All Weeks</div>
+                </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <button class="btn-print" onclick="window.print()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v6H6z"/></svg>
@@ -1212,14 +1221,30 @@
         const all = document.querySelectorAll('.proj-week-cb').length;
         const label = document.getElementById('projWeekLabel');
         label.textContent = (checked.length === all) ? "All Weeks Selected" : ((checked.length === 0) ? "No Weeks Selected" : `${checked.length} Weeks Selected`);
+        
+        // UPDATE DYNAMIC PRINT HEADER WITH SELECTED WEEKS
+        const printHeader = document.getElementById('projPrintWeekHeader');
+        if (printHeader) {
+            if (checked.length === all) {
+                printHeader.textContent = "Filtered Period: All Weeks";
+            } else if (checked.length === 1) {
+                printHeader.textContent = `Filtered Period: ${formatWeekLabel(checked[0])}`;
+            } else {
+                const labels = checked.map(w => formatWeekLabel(w)).join(', ');
+                printHeader.textContent = `Filtered Period: ${labels}`;
+            }
+        }
+
         updateProjectionDashboard();
     }
+
     function resetProjectionFilters() {
         document.getElementById('projMonthSelect').value = "All";
         document.getElementById('projEntitySelect').value = "All";
         document.getElementById('selectAllWeeks').checked = true;
         toggleSelectAllWeeks(document.getElementById('selectAllWeeks'));
     }
+
     function formatNumber(val) { return (val || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
     function updateProjectionDashboard() {
