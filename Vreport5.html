@@ -360,7 +360,6 @@
         .multi-select-option { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12px; cursor: pointer; border-radius: 4px; }
         .multi-select-option:hover { background-color: #f1f5f9; }
 
-        /* PRINT STYLES FOR PHASE 2 PDF EXPORT */
         @media print {
             body { background-color: #ffffff !important; }
             .sidebar, .controls-container, .btn-print, #variance-section, #daily-section { display: none !important; }
@@ -399,7 +398,7 @@
 
 <main class="main-wrapper">
 
-    <!-- VARIANCE ANALYSIS REPORT (PHASE 1 - LOCKED) -->
+    <!-- VARIANCE ANALYSIS REPORT (PHASE 1) -->
     <div id="variance-section" class="tab-content active">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -442,6 +441,7 @@
                         <option value="Category" selected>Category (Default)</option>
                         <option value="Entity">Entity</option>
                         <option value="Owner">Owner</option>
+                        <option value="Currency">Currency</option>
                     </select>
                 </div>
 
@@ -483,7 +483,7 @@
         </div>
     </div>
 
-    <!-- PROJECTION DASHBOARD (PHASE 2 - PRINT WITH WEEK HEADER) -->
+    <!-- PROJECTION DASHBOARD (PHASE 2) -->
     <div id="projection-section" class="tab-content">
         <div class="dashboard-card">
             <div class="brand-header">
@@ -973,7 +973,8 @@
             const matchCat = (selCat === "All" || d.category === selCat);
             const isValidGroup = (groupBy === "Category") ? MASTER_CATEGORIES.includes(d.category) : true;
             const isValidOwner = (groupBy === "Owner") ? (d.owner !== null) : true;
-            return matchMonth && matchWeek && matchEntity && matchCat && isValidGroup && isValidOwner;
+            const isValidCurrency = (groupBy === "Currency") ? (d.currency !== null && d.currency !== "") : true;
+            return matchMonth && matchWeek && matchEntity && matchCat && isValidGroup && isValidOwner && isValidCurrency;
         });
 
         const aggregated = {};
@@ -985,6 +986,7 @@
             let key = item.category;
             if (groupBy === "Entity") key = item.entity || "Unknown";
             if (groupBy === "Owner") key = item.owner;
+            if (groupBy === "Currency") key = String(item.currency || "SAR").toUpperCase().trim();
 
             if (!key) return;
 
@@ -1042,7 +1044,7 @@
         const tfoot = document.getElementById('tableFooter');
 
         headerRow.innerHTML = `
-            <th>${groupBy === "Category" ? "Category" : (groupBy === "Owner" ? "Owner" : "Entity")}</th>
+            <th>${groupBy === "Category" ? "Category" : (groupBy === "Owner" ? "Owner" : (groupBy === "Currency" ? "Currency" : "Entity"))}</th>
             <th class="num-col">Projected Amount</th>
             <th class="num-col">Actual Amount</th>
             <th class="num-col">Difference</th>
@@ -1222,7 +1224,6 @@
         const label = document.getElementById('projWeekLabel');
         label.textContent = (checked.length === all) ? "All Weeks Selected" : ((checked.length === 0) ? "No Weeks Selected" : `${checked.length} Weeks Selected`);
         
-        // UPDATE DYNAMIC PRINT HEADER WITH SELECTED WEEKS
         const printHeader = document.getElementById('projPrintWeekHeader');
         if (printHeader) {
             if (checked.length === all) {
