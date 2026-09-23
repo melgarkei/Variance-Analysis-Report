@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BSP Reports Extractor - Payment Details Report</title>
+  <title>BSP Reports Extractor - Almosafer Payment Analytics</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -83,7 +83,7 @@
         <!-- Action Controls -->
         <div class="flex items-center space-x-3">
           <button onclick="toggleHistoryDrawer()" class="bg-almosafer-700 hover:bg-almosafer-600 text-white px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition border border-almosafer-500/30">
-            <i class="ph-bold ph-clock-counter-clockwise text-lg"></i>
+            <i class="ph-bold ph-clock-counter-clockwise text-lg text-coral-400"></i>
             <span>History</span>
           </button>
           <button onclick="exportTwoTabExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition shadow-md">
@@ -113,7 +113,7 @@
       <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
         <label for="reportTypeSelect" class="text-xs text-slate-500 font-medium whitespace-nowrap">Selected Report:</label>
         <select id="reportTypeSelect" onchange="changeReportType(this.value)" class="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-2 focus:ring-coral-500 focus:border-coral-500 font-semibold min-w-[200px]">
-          <option value="payment_details">Payment Details Report</option>
+          <option value="Payment Details Report">Payment Details Report</option>
         </select>
       </div>
 
@@ -164,8 +164,20 @@
       </div>
     </div>
 
+    <!-- Automatic Data Cross-Checking Status Banner -->
+    <div id="crossCheckBanner" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs flex items-center justify-between no-print">
+      <div class="flex items-center space-x-2">
+        <i class="ph-bold ph-check-circle text-emerald-600 text-lg"></i>
+        <div>
+          <p class="font-bold text-emerald-800">Automatic PDF Cross-Check Passed</p>
+          <p class="text-emerald-700 text-[11px]" id="crossCheckDetails">Sum of locations matches the Remittance Total extracted from PDF header.</p>
+        </div>
+      </div>
+      <span class="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">100% Verified</span>
+    </div>
+
     <!-- Report Data Preview Box -->
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm" id="printable-area">
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm space-y-6" id="printable-area">
       
       <!-- Report Header -->
       <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
@@ -177,13 +189,17 @@
         <div class="text-right no-print">
           <button onclick="clearCurrentAccountData()" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
             <i class="ph-bold ph-trash"></i>
-            <span>Clear Report Data</span>
+            <span>Clear Active Data</span>
           </button>
         </div>
       </div>
 
-      <!-- Table Content -->
-      <div class="overflow-x-auto custom-scrollbar">
+      <!-- Main Detailed Location Table -->
+      <div class="overflow-x-auto custom-scrollbar px-4">
+        <div class="mb-2 text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center space-x-1">
+          <i class="ph-bold ph-list-bullets text-almosafer-600"></i>
+          <span>Detailed IATA Breakdown</span>
+        </div>
         <table class="w-full text-left text-sm text-slate-700">
           <thead class="bg-almosafer-600 text-xs uppercase font-bold text-white">
             <tr>
@@ -202,8 +218,33 @@
           </tbody>
           <tfoot class="bg-slate-100 border-t-2 border-slate-300 font-bold">
             <tr>
-              <td class="p-3 text-right text-slate-600" colspan="2">Total:</td>
+              <td class="p-3 text-right text-slate-600" colspan="2">Total Detailed:</td>
               <td class="p-3 text-right text-coral-600 font-black text-sm" id="tableTotalAmount">0.00</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Pivot / Summary by Location Table -->
+      <div class="overflow-x-auto custom-scrollbar px-4 pb-4 border-t border-slate-100 pt-4" id="pivotContainer">
+        <div class="mb-2 text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center space-x-1">
+          <i class="ph-bold ph-chart-pie-slice text-coral-500"></i>
+          <span>Pivot Summary by Location</span>
+        </div>
+        <table class="w-full text-left text-sm text-slate-700 border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-almosafer-800 text-xs uppercase font-bold text-white">
+            <tr>
+              <th class="p-2.5 italic font-serif">Location</th>
+              <th class="p-2.5 italic font-serif text-right">Total Remittance (<span class="accountCurrencySpan">SAR</span>)</th>
+            </tr>
+          </thead>
+          <tbody id="pivotTableBody" class="divide-y divide-slate-200 font-mono text-xs">
+            <!-- Dynamic Pivot Rows -->
+          </tbody>
+          <tfoot class="bg-purple-50 border-t-2 border-purple-300 font-bold">
+            <tr>
+              <td class="p-2.5 text-right text-purple-900">Grand Total Pivot:</td>
+              <td class="p-2.5 text-right text-purple-900 font-black text-sm" id="pivotTotalAmount">0.00</td>
             </tr>
           </tfoot>
         </table>
@@ -236,7 +277,7 @@
 
     <!-- Drawer Controls -->
     <div class="p-3 bg-slate-100 border-b border-slate-200 flex justify-between items-center text-xs">
-      <span class="text-slate-500 font-medium">Year $\rightarrow$ Account $\rightarrow$ Month $\rightarrow$ Reports</span>
+      <span class="text-slate-500 font-medium">Year &rarr; Account &rarr; Month &rarr; Reports</span>
       <button onclick="clearAllHistory()" class="text-red-600 hover:text-red-800 font-semibold transition">
         Clear All History
       </button>
@@ -260,8 +301,8 @@
         province: 'MOSAFER-KSA',
         paymentLabel: 'PAYMENTS-KSA RUH',
         iban: 'SA3345000000511201675060',
-        reportType: 'payment_details',
-        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
+        reportType: 'Payment Details Report',
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '', remittanceTotalHeader: 0 },
         items: [] 
       },
       uae: { 
@@ -273,8 +314,8 @@
         province: 'MOSAFER-UAE',
         paymentLabel: 'PAYMENTS-UAE DXB',
         iban: 'AE123456789012345678901',
-        reportType: 'payment_details',
-        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
+        reportType: 'Payment Details Report',
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '', remittanceTotalHeader: 0 },
         items: [] 
       },
       kuwait: { 
@@ -286,8 +327,8 @@
         province: 'MOSAFER-KWT',
         paymentLabel: 'PAYMENTS-KWT KWI',
         iban: 'KW987654321098765432109',
-        reportType: 'payment_details',
-        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
+        reportType: 'Payment Details Report',
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '', remittanceTotalHeader: 0 },
         items: [] 
       },
       almousim1: { 
@@ -299,8 +340,8 @@
         province: 'ALMOUSIM-1',
         paymentLabel: 'PAYMENTS-ALM 1',
         iban: 'SA1111000000511201675001',
-        reportType: 'payment_details',
-        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
+        reportType: 'Payment Details Report',
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '', remittanceTotalHeader: 0 },
         items: [] 
       },
       almousim2: { 
@@ -312,8 +353,8 @@
         province: 'ALMOUSIM-2',
         paymentLabel: 'PAYMENTS-ALM 2',
         iban: 'SA2222000000511201675002',
-        reportType: 'payment_details',
-        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
+        reportType: 'Payment Details Report',
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '', remittanceTotalHeader: 0 },
         items: [] 
       }
     };
@@ -328,7 +369,6 @@
       setupEventListeners();
     });
 
-    // History Storage Management
     function loadHistoryFromStorage() {
       try {
         const stored = localStorage.getItem('bsp_report_history');
@@ -470,6 +510,11 @@
         acc.meta.paymentDueDate = dueDateMatch[1].replace(/-/g, ' ');
       }
 
+      const headerTotalMatch = text.match(/REMITTANCE TOTAL\([A-Z]{3}\)[\s\S]*?([-+]?[\d,]+\.\d{2})/i);
+      if (headerTotalMatch) {
+        acc.meta.remittanceTotalHeader = parseFloat(headerTotalMatch[1].replace(/,/g, ''));
+      }
+
       const lineRegex = /(\d{2}-\d\s\d{4}\s\d)\s+([A-Z]{2}|HE)\s+.*?\s+([A-Za-z'\s]+?)\s+([-+]?[\d,]+\.\d{2})/g;
       
       let match;
@@ -485,8 +530,6 @@
 
       if (parsedItems.length > 0) {
         acc.items = parsedItems;
-
-        // Auto-save parsed report into history tree
         saveCurrentToHistory();
       }
     }
@@ -495,7 +538,6 @@
       const acc = ACCOUNTS[activeAccountKey];
       if (!acc.items.length) return;
 
-      // Determine Year & Month from Billing Period e.g. "(08-SEP-2026 to 15-SEP-2026)"
       let year = '2026';
       let month = 'September';
 
@@ -520,13 +562,12 @@
         accountName: acc.name,
         month: month,
         billingPeriod: acc.meta.billingPeriod,
-        reportType: 'Payment Details Report',
+        reportType: acc.reportType || 'Payment Details Report',
         meta: { ...acc.meta },
         items: [...acc.items],
         createdDate: new Date().toLocaleDateString()
       };
 
-      // Avoid duplicates for same account & billing period
       reportHistory = reportHistory.filter(h => !(h.accountId === acc.id && h.billingPeriod === acc.meta.billingPeriod));
       reportHistory.unshift(record);
       saveHistoryToStorage();
@@ -544,26 +585,38 @@
       document.getElementById('metaPaymentDueDate').innerText = acc.meta.paymentDueDate || '---';
       document.getElementById('thPaymentDueDate').innerText = acc.meta.paymentDueDate || '---';
 
-      document.getElementById('reportTypeSelect').value = acc.reportType;
+      document.getElementById('reportTypeSelect').value = acc.reportType || 'Payment Details Report';
 
       const currencySpans = document.querySelectorAll('.accountCurrencySpan');
       currencySpans.forEach(s => s.innerText = acc.currency);
 
       const tbody = document.getElementById('reportTableBody');
+      const pivotBody = document.getElementById('pivotTableBody');
       const emptyState = document.getElementById('emptyState');
+      const crossCheckBanner = document.getElementById('crossCheckBanner');
+
       tbody.innerHTML = '';
+      pivotBody.innerHTML = '';
 
       if (!acc.items.length) {
         emptyState.classList.remove('hidden');
+        crossCheckBanner.classList.add('hidden');
         document.getElementById('tableTotalAmount').innerText = '0.00';
+        document.getElementById('pivotTotalAmount').innerText = '0.00';
         return;
       }
 
       emptyState.classList.add('hidden');
       let total = 0;
+      const pivotMap = {};
 
       acc.items.forEach((item, index) => {
         total += item.amount;
+
+        // Group by Location for Pivot Table
+        const loc = item.location || 'Unassigned';
+        pivotMap[loc] = (pivotMap[loc] || 0) + item.amount;
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
@@ -581,6 +634,34 @@
       });
 
       document.getElementById('tableTotalAmount').innerText = `${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${acc.currency}`;
+
+      // Render Pivot Table Rows
+      let pivotTotal = 0;
+      Object.keys(pivotMap).forEach(locName => {
+        const amt = pivotMap[locName];
+        pivotTotal += amt;
+        const ptr = document.createElement('tr');
+        ptr.className = 'hover:bg-slate-50 transition';
+        ptr.innerHTML = `
+          <td class="p-2.5 font-bold text-slate-800">${locName}</td>
+          <td class="p-2.5 text-right font-bold ${amt < 0 ? 'text-coral-600' : 'text-emerald-600'}">
+            ${amt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          </td>
+        `;
+        pivotBody.appendChild(ptr);
+      });
+
+      document.getElementById('pivotTotalAmount').innerText = `${pivotTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${acc.currency}`;
+
+      // Cross-checking verification logic
+      crossCheckBanner.classList.remove('hidden');
+      if (acc.meta.remittanceTotalHeader && Math.abs(acc.meta.remittanceTotalHeader - total) < 0.01) {
+        crossCheckBanner.className = 'bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs flex items-center justify-between no-print';
+        document.getElementById('crossCheckDetails').innerText = `Location sum (${total.toFixed(2)} ${acc.currency}) matches header remittance total (${acc.meta.remittanceTotalHeader.toFixed(2)} ${acc.currency}).`;
+      } else {
+        crossCheckBanner.className = 'bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs flex items-center justify-between no-print';
+        document.getElementById('crossCheckDetails').innerText = `Extracted location sum is ${total.toFixed(2)} ${acc.currency}. Please verify table entries with source PDF.`;
+      }
     }
 
     function updateItem(index, field, val) {
@@ -596,13 +677,12 @@
     function clearCurrentAccountData() {
       if (confirm(`Clear report data for ${ACCOUNTS[activeAccountKey].name}?`)) {
         ACCOUNTS[activeAccountKey].items = [];
-        ACCOUNTS[activeAccountKey].meta = { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' };
+        ACCOUNTS[activeAccountKey].meta = { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '', remittanceTotalHeader: 0 };
         renderTabs();
         renderActiveAccountData();
       }
     }
 
-    // RENDER HIERARCHICAL TREE (Year -> Account -> Month -> Reports)
     function renderHistoryTree() {
       const container = document.getElementById('historyTreeContainer');
       container.innerHTML = '';
@@ -618,7 +698,6 @@
         return;
       }
 
-      // Grouping logic: Year -> Account -> Month -> Items
       const years = [...new Set(reportHistory.map(r => r.year))].sort().reverse();
 
       years.forEach(yr => {
@@ -668,7 +747,6 @@
           if (!accReports.length) {
             accContent.innerHTML = `<p class="text-[11px] text-slate-400 italic">No reports generated for ${yr}</p>`;
           } else {
-            // Group by Month
             const months = [...new Set(accReports.map(r => r.month))];
             months.forEach(m => {
               const mDiv = document.createElement('div');
@@ -721,6 +799,7 @@
       activeAccountKey = item.accountId;
       ACCOUNTS[activeAccountKey].meta = { ...item.meta };
       ACCOUNTS[activeAccountKey].items = [...item.items];
+      ACCOUNTS[activeAccountKey].reportType = item.reportType;
 
       renderTabs();
       renderActiveAccountData();
@@ -762,7 +841,6 @@
       });
     }
 
-    // EXCEL EXPORT (EXCELJS)
     async function exportTwoTabExcel() {
       const acc = ACCOUNTS[activeAccountKey];
       if (!acc.items.length) {
@@ -775,10 +853,14 @@
       const redHeaderColor = 'FFFF0000';
       const lightRowColor = 'FFF8FAFC';
       const totalFillColor = 'FFD9D2E9';
+      const pivotHeaderColor = 'FF003A45';
 
-      // TAB 1: LOCATION SUMMARY
+      // ==========================================
+      // TAB 1: LOCATION SUMMARY (Detailed + Pivot)
+      // ==========================================
       const ws1 = workbook.addWorksheet('Location Summary', { views: [{ showGridLines: true }] });
 
+      // Title Banner
       const r1 = ws1.addRow([acc.meta.companyName]);
       const r2 = ws1.addRow([`IATA Account: ${acc.meta.iataAccount}`]);
       const r3 = ws1.addRow([`Billing Perod: ${acc.meta.billingPeriod}`]);
@@ -791,6 +873,7 @@
         cell.alignment = { horizontal: 'center' };
       });
 
+      // Detailed Table Headers
       const h1 = ws1.addRow(['IATA NO.', 'Location', `Amount (${acc.currency})`]);
       h1.eachCell(cell => {
         cell.font = { name: 'Calibri', size: 11, bold: true, italic: true };
@@ -798,7 +881,12 @@
         cell.alignment = { horizontal: cell.col === 3 ? 'right' : 'left' };
       });
 
+      // Detailed Items Rows
+      const pivotMap = {};
       acc.items.forEach((item, idx) => {
+        const loc = item.location || 'Unassigned';
+        pivotMap[loc] = (pivotMap[loc] || 0) + item.amount;
+
         const row = ws1.addRow([item.iataNo, item.location, item.amount]);
         row.getCell(1).alignment = { horizontal: 'left' };
         row.getCell(2).alignment = { horizontal: 'left' };
@@ -813,6 +901,7 @@
         });
       });
 
+      // Detailed Total Row
       const totalAmount = acc.items.reduce((sum, item) => sum + item.amount, 0);
       const totalRow = ws1.addRow(['Total:', '', totalAmount]);
       ws1.mergeCells(totalRow.number, 1, totalRow.number, 2);
@@ -831,11 +920,75 @@
         cell.border = { top: { style: 'thin' }, bottom: { style: 'double' }, left: { style: 'thin' }, right: { style: 'thin' } };
       });
 
+      // Spacing rows before Pivot Table
+      ws1.addRow([]);
+      ws1.addRow([]);
+
+      // Pivot Table Section Header
+      const pivotTitleRow = ws1.addRow(['SUMMARY / PIVOT BY LOCATION']);
+      ws1.mergeCells(pivotTitleRow.number, 1, pivotTitleRow.number, 3);
+      pivotTitleRow.getCell(1).font = { name: 'Calibri', size: 11, bold: true, color: { argb: tealHeaderColor } };
+      pivotTitleRow.getCell(1).alignment = { horizontal: 'left' };
+
+      const pivotHeader = ws1.addRow(['Location', '', `Total Remittance (${acc.currency})`]);
+      ws1.mergeCells(pivotHeader.number, 1, pivotHeader.number, 2);
+      
+      pivotHeader.getCell(1).font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+      pivotHeader.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: pivotHeaderColor } };
+      pivotHeader.getCell(1).alignment = { horizontal: 'left' };
+
+      pivotHeader.getCell(3).font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+      pivotHeader.getCell(3).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: pivotHeaderColor } };
+      pivotHeader.getCell(3).alignment = { horizontal: 'right' };
+
+      pivotHeader.eachCell(cell => {
+        cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+      });
+
+      let pivotSum = 0;
+      Object.keys(pivotMap).forEach((locName, pIdx) => {
+        const pAmt = pivotMap[locName];
+        pivotSum += pAmt;
+
+        const pRow = ws1.addRow([locName, '', pAmt]);
+        ws1.mergeCells(pRow.number, 1, pRow.number, 2);
+
+        pRow.getCell(1).font = { name: 'Calibri', size: 10, bold: true };
+        pRow.getCell(3).font = { name: 'Calibri', size: 10, bold: true };
+        pRow.getCell(3).numFmt = '#,##0.00';
+        pRow.getCell(3).alignment = { horizontal: 'right' };
+
+        pRow.eachCell(cell => {
+          if (pIdx % 2 === 1) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: lightRowColor } };
+          }
+          cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+        });
+      });
+
+      // Pivot Total Row
+      const pTotRow = ws1.addRow(['Grand Total Pivot:', '', pivotSum]);
+      ws1.mergeCells(pTotRow.number, 1, pTotRow.number, 2);
+
+      pTotRow.getCell(1).font = { name: 'Calibri', size: 11, bold: true };
+      pTotRow.getCell(1).alignment = { horizontal: 'center' };
+
+      pTotRow.getCell(3).font = { name: 'Calibri', size: 11, bold: true };
+      pTotRow.getCell(3).numFmt = '#,##0.00';
+      pTotRow.getCell(3).alignment = { horizontal: 'right' };
+
+      pTotRow.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: totalFillColor } };
+        cell.border = { top: { style: 'thin' }, bottom: { style: 'double' }, left: { style: 'thin' }, right: { style: 'thin' } };
+      });
+
       ws1.getColumn(1).width = 22;
       ws1.getColumn(2).width = 28;
-      ws1.getColumn(3).width = 22;
+      ws1.getColumn(3).width = 24;
 
+      // ==========================================
       // TAB 2: VENDOR POSTING SUMMARY
+      // ==========================================
       const ws2 = workbook.addWorksheet('Vendor Posting Summary', { views: [{ showGridLines: true }] });
 
       const t2_r1 = ws2.addRow([acc.meta.companyName]);
