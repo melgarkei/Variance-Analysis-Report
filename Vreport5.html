@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Almosafer Financial Comparison Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -28,6 +28,7 @@
             color: var(--text-primary);
             display: flex;
             min-height: 100vh;
+            position: relative;
         }
 
         .sidebar {
@@ -101,7 +102,7 @@
         .main-wrapper {
             margin-left: var(--sidebar-width);
             flex: 1;
-            padding: 28px;
+            padding: 28px 28px 60px 28px;
             width: calc(100% - var(--sidebar-width));
         }
 
@@ -360,9 +361,51 @@
         .multi-select-option { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12px; cursor: pointer; border-radius: 4px; }
         .multi-select-option:hover { background-color: #f1f5f9; }
 
+        /* CLEAN BOTTOM-RIGHT TRADEMARK WATERMARK STYLES */
+        .trademarks-footer {
+            position: fixed;
+            bottom: 16px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(6px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0, 43, 58, 0.08);
+            z-index: 50;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .trademark-brand-name {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--almosafer-navy);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .trademark-sub-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--almosafer-teal);
+            letter-spacing: 0.5px;
+        }
+
+        .trademark-symbol {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            vertical-align: super;
+            margin-left: 1px;
+        }
+
         @media print {
             body { background-color: #ffffff !important; }
-            .sidebar, .controls-container, .btn-print, #variance-section, #daily-section { display: none !important; }
+            .sidebar, .controls-container, .btn-print, #variance-section, #daily-section, .trademarks-footer { display: none !important; }
             .main-wrapper { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
             .dashboard-card { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
             .pivot-card { page-break-inside: avoid; border: 1px solid #cbd5e1 !important; margin-bottom: 20px !important; }
@@ -634,6 +677,14 @@
                 <p style="margin-top: 8px;">This module will render granular daily payment proposals and transaction logs.</p>
             </div>
         </div>
+    </div>
+
+    <!-- CLEAN BOTTOM-RIGHT TRADEMARK -->
+    <div class="trademarks-footer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span class="trademark-brand-name">Almosafer</span>
+        <span class="trademark-sub-name">Finance</span>
+        <span class="trademark-symbol">™</span>
     </div>
 
 </main>
