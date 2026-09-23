@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BSP Reports Extractor & Multi-Account Analytics</title>
+  <title>BSP Reports Extractor - Payment Details Report</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -45,7 +45,7 @@
       #printable-area { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; padding: 20px; }
       .no-print { display: none !important; }
       table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+      th, td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 11px; }
     }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
@@ -54,56 +54,71 @@
 </head>
 <body class="h-full flex flex-col font-sans antialiased bg-slate-950 text-slate-100">
 
-  <!-- Top Navbar -->
+  <!-- Top Navigation Header -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo & Title -->
         <div class="flex items-center space-x-3">
           <div class="bg-brand-600 p-2 rounded-lg text-white">
             <i class="ph-bold ph-file-pdf text-2xl"></i>
           </div>
           <div>
-            <h1 class="text-lg font-bold text-white tracking-tight">BSP Report Extractor</h1>
-            <p class="text-xs text-slate-400">Multi-Account Airline Billing & Settlement Analytics</p>
+            <h1 class="text-lg font-bold text-white tracking-tight">BSP Payment Details Extractor</h1>
+            <p class="text-xs text-slate-400">Agent Group Remittance Summary (FCGRREMSUM)</p>
           </div>
         </div>
 
+        <!-- Action Controls -->
         <div class="flex items-center space-x-3">
-          <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-emerald-900/20">
+          <button onclick="exportTwoTabExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-emerald-900/20">
             <i class="ph-bold ph-file-xls text-lg"></i>
-            <span>Export Excel (.xlsx)</span>
+            <span>Export 2-Tab Excel (.xlsx)</span>
           </button>
           <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 border border-slate-700 transition">
             <i class="ph-bold ph-printer text-lg"></i>
             <span>Print</span>
           </button>
         </div>
+
       </div>
     </div>
   </header>
 
-  <!-- Account Selector Tabs -->
-  <div class="bg-slate-900/80 border-b border-slate-800 backdrop-blur sticky top-16 z-20 no-print">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <nav class="flex space-x-2 py-3 overflow-x-auto custom-scrollbar" id="accountTabs">
-        <!-- Tabs populated dynamically -->
+  <!-- Account Selector Tabs & Dropdown Bar -->
+  <div class="bg-slate-900/90 border-b border-slate-800 sticky top-16 z-20 no-print backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between py-3 gap-3">
+      
+      <!-- Account Tabs -->
+      <nav class="flex space-x-2 overflow-x-auto w-full md:w-auto custom-scrollbar" id="accountTabs">
+        <!-- Account Tabs populated dynamically -->
       </nav>
+
+      <!-- Report Type Dropdown -->
+      <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+        <label for="reportTypeSelect" class="text-xs text-slate-400 font-medium whitespace-nowrap">Selected Report:</label>
+        <select id="reportTypeSelect" onchange="changeReportType(this.value)" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg p-2 focus:ring-brand-500 focus:border-brand-500 font-semibold min-w-[200px]">
+          <option value="payment_details">Payment Details Report</option>
+        </select>
+      </div>
+
     </div>
   </div>
 
-  <!-- Main Body Content -->
+  <!-- Main Body Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Upload Area -->
-    <div class="bg-slate-900 rounded-xl border-2 border-dashed border-slate-700 p-8 text-center hover:border-brand-500 transition-colors relative no-print cursor-pointer" id="dropZone">
+    <!-- Upload PDF Box -->
+    <div class="bg-slate-900 rounded-xl border-2 border-dashed border-slate-700 p-6 text-center hover:border-brand-500 transition-colors relative no-print cursor-pointer" id="dropZone">
       <input type="file" id="pdfFileInput" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple>
-      <div class="flex flex-col items-center justify-center space-y-3">
-        <div class="p-4 bg-slate-800 rounded-full text-brand-500">
-          <i class="ph-duotone ph-upload-simple text-4xl"></i>
+      <div class="flex flex-col items-center justify-center space-y-2">
+        <div class="p-3 bg-slate-800 rounded-full text-brand-500">
+          <i class="ph-duotone ph-upload-simple text-3xl"></i>
         </div>
         <div>
-          <p class="text-base font-semibold text-white">Click or drag & drop BSP PDF Reports here</p>
-          <p class="text-xs text-slate-400 mt-1">Parses ticket numbers, gross fares, taxes, commissions, net payable, and ADMs/ACMs directly inside your browser.</p>
+          <p class="text-sm font-semibold text-white">Click or Drag & Drop IATA BSP PDF (FCGRREMSUM) here</p>
+          <p class="text-xs text-slate-400 mt-1">Parses Company Name, IATA Account, Billing Period, Remittance Date, Locations, and Amounts</p>
         </div>
         <div id="fileProcessingBadge" class="hidden items-center space-x-2 text-xs bg-brand-900/50 text-brand-300 px-3 py-1 rounded-full border border-brand-700">
           <i class="ph-bold ph-spinner animate-spin"></i>
@@ -112,153 +127,234 @@
       </div>
     </div>
 
-    <!-- Active Account Banner & Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="statsCards">
-      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-slate-400">Total Tickets / Transactions</p>
-          <h3 class="text-2xl font-extrabold text-white mt-1" id="statTicketCount">0</h3>
-        </div>
-        <div class="p-3 bg-slate-800 rounded-lg text-brand-400">
-          <i class="ph-bold ph-ticket text-2xl"></i>
-        </div>
+    <!-- Metadata Cards Header -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="metadataHeader">
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p class="text-xs font-medium text-slate-400">Company Name</p>
+        <p class="text-sm font-bold text-red-400 mt-1 uppercase truncate" id="metaCompanyName">ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.</p>
       </div>
 
-      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-slate-400">Total Gross Fare</p>
-          <h3 class="text-2xl font-extrabold text-emerald-400 mt-1" id="statGrossFare">0.00</h3>
-        </div>
-        <div class="p-3 bg-slate-800 rounded-lg text-emerald-400">
-          <i class="ph-bold ph-currency-circle-dollar text-2xl"></i>
-        </div>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p class="text-xs font-medium text-slate-400">IATA Account No.</p>
+        <p class="text-sm font-bold text-red-400 mt-1 font-mono" id="metaIATAAccount">7120167</p>
       </div>
 
-      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-slate-400">Total Taxes / TFCs</p>
-          <h3 class="text-2xl font-extrabold text-amber-400 mt-1" id="statTotalTaxes">0.00</h3>
-        </div>
-        <div class="p-3 bg-slate-800 rounded-lg text-amber-400">
-          <i class="ph-bold ph-receipt text-2xl"></i>
-        </div>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p class="text-xs font-medium text-slate-400">Billing Period</p>
+        <p class="text-sm font-bold text-red-400 mt-1" id="metaBillingPeriod">(08-SEP-2026 to 15-SEP-2026)</p>
       </div>
 
-      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-slate-400">Net Payable Amount</p>
-          <h3 class="text-2xl font-extrabold text-sky-400 mt-1" id="statNetPayable">0.00</h3>
-        </div>
-        <div class="p-3 bg-slate-800 rounded-lg text-sky-400">
-          <i class="ph-bold ph-wallet text-2xl"></i>
-        </div>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p class="text-xs font-medium text-slate-400">Payment Due Date</p>
+        <p class="text-sm font-bold text-white mt-1 uppercase" id="metaPaymentDueDate">22 SEP 2026</p>
       </div>
     </div>
 
-    <!-- Printable & Editable Extracted Data Table -->
+    <!-- Report Data View (Matches Attached Excel Preview) -->
     <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-xl" id="printable-area">
-      <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 no-print">
-        <div class="flex items-center space-x-3">
-          <h2 class="text-base font-bold text-white flex items-center space-x-2">
-            <span>Extracted BSP Billing Report Data</span>
-            <span id="activeAccountBadge" class="bg-brand-900 text-brand-300 text-xs px-2.5 py-0.5 rounded-full border border-brand-700">KSA</span>
-          </h2>
+      
+      <!-- Printable Header Title -->
+      <div class="p-4 border-b border-slate-800 bg-slate-900 flex justify-between items-center">
+        <div>
+          <h2 class="text-base font-bold text-red-500 uppercase tracking-wide" id="previewCompanyName">ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.</h2>
+          <p class="text-xs font-bold text-red-400 mt-0.5">IATA Account: <span id="previewIATAAcc">7120167</span></p>
+          <p class="text-xs font-bold text-red-400">Billing Period: <span id="previewBillingPeriod">(08-SEP-2026 to 15-SEP-2026)</span></p>
         </div>
-        <button onclick="clearCurrentAccountData()" class="text-xs bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
-          <i class="ph-bold ph-trash"></i>
-          <span>Clear Active Account Data</span>
-        </button>
+        <div class="text-right no-print">
+          <button onclick="clearCurrentAccountData()" class="text-xs bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+            <i class="ph-bold ph-trash"></i>
+            <span>Clear Report Data</span>
+          </button>
+        </div>
       </div>
 
+      <!-- Report Table Preview -->
       <div class="overflow-x-auto custom-scrollbar">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-800/80 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+        <table class="w-full text-left text-sm text-slate-200">
+          <thead class="bg-slate-800/90 text-xs uppercase font-bold text-slate-300 border-b border-slate-700">
             <tr>
-              <th class="p-3">#</th>
-              <th class="p-3">Issue Date</th>
-              <th class="p-3">Document / Ticket #</th>
-              <th class="p-3">Airline Code</th>
-              <th class="p-3 text-right">Gross Fare</th>
-              <th class="p-3 text-right">Taxes / TFCs</th>
-              <th class="p-3 text-right">Comm. Amount</th>
-              <th class="p-3 text-right">Net Payable</th>
-              <th class="p-3 text-center no-print">Actions</th>
+              <th class="p-3 text-center bg-slate-800 font-extrabold text-white underline" colspan="3" id="tableHeaderDueTitle">
+                PAYMENT DUE <span id="thPaymentDueDate">22 SEP 2026</span>
+              </th>
+            </tr>
+            <tr class="bg-slate-800/50">
+              <th class="p-3 italic font-serif">IATA NO.</th>
+              <th class="p-3 italic font-serif">Location</th>
+              <th class="p-3 italic font-serif text-right">Amount (<span class="accountCurrencySpan">SAR</span>)</th>
             </tr>
           </thead>
-          <tbody id="reportTableBody" class="divide-y divide-slate-800">
-            <!-- Dynamic Report Rows -->
+          <tbody id="reportTableBody" class="divide-y divide-slate-800 font-mono text-xs">
+            <!-- Dynamic IATA Rows -->
           </tbody>
+          <tfoot class="bg-purple-950/40 border-t-2 border-purple-800 font-bold">
+            <tr>
+              <td class="p-3 text-right" colspan="2">Total:</td>
+              <td class="p-3 text-right text-purple-300 font-bold text-sm" id="tableTotalAmount">0.00</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
+      <!-- Empty State Banner -->
       <div id="emptyState" class="py-12 text-center text-slate-500">
         <i class="ph-duotone ph-file-x text-5xl mb-2 text-slate-600"></i>
-        <p class="text-sm">No report data extracted for this account yet.</p>
-        <p class="text-xs text-slate-600 mt-1">Upload a BSP PDF above to populate this view.</p>
+        <p class="text-sm">No report data uploaded for this account tab yet.</p>
+        <p class="text-xs text-slate-600 mt-1">Upload an IATA BSP PDF file above to parse numbers automatically.</p>
       </div>
     </div>
 
   </main>
 
   <script>
-    // State management for Accounts
+    // Configurable Account Settings & Data Model
     const ACCOUNTS = {
-      ksa: { id: 'ksa', name: 'KSA Account', currency: 'SAR', data: [] },
-      uae: { id: 'uae', name: 'UAE Account', currency: 'AED', data: [] },
-      kuwait: { id: 'kuwait', name: 'Kuwait Account', currency: 'KWD', data: [] },
-      almousim1: { id: 'almousim1', name: 'Almousim 1', currency: 'SAR', data: [] },
-      almousim2: { id: 'almousim2', name: 'Almousim 2', currency: 'SAR', data: [] }
+      ksa: { 
+        id: 'ksa', 
+        name: 'KSA Account', 
+        currency: 'SAR',
+        companyCode: '1002',
+        vendorCode: '8800003',
+        province: 'MOSAFER-KSA',
+        paymentLabel: 'PAYMENTS-KSA RUH',
+        iban: 'SA3345000000511201675060',
+        reportType: 'payment_details',
+        meta: {
+          companyName: 'ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.',
+          iataAccount: '7120167',
+          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
+          paymentDueDate: '22 SEP 2026'
+        },
+        items: [
+          { iataNo: '71-2 0061 4', location: 'Riyadh', amount: -8161.46 },
+          { iataNo: '71-2 0136 2', location: "Ta'if", amount: 4968.00 },
+          { iataNo: '71-2 0167 5', location: 'Riyadh', amount: 12795.20 }
+        ] 
+      },
+      uae: { 
+        id: 'uae', 
+        name: 'UAE Account', 
+        currency: 'AED',
+        companyCode: '2001',
+        vendorCode: '8800004',
+        province: 'MOSAFER-UAE',
+        paymentLabel: 'PAYMENTS-UAE DXB',
+        iban: 'AE123456789012345678901',
+        reportType: 'payment_details',
+        meta: {
+          companyName: 'ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.',
+          iataAccount: '7120168',
+          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
+          paymentDueDate: '22 SEP 2026'
+        },
+        items: [] 
+      },
+      kuwait: { 
+        id: 'kuwait', 
+        name: 'Kuwait Account', 
+        currency: 'KWD',
+        companyCode: '3001',
+        vendorCode: '8800005',
+        province: 'MOSAFER-KWT',
+        paymentLabel: 'PAYMENTS-KWT KWI',
+        iban: 'KW987654321098765432109',
+        reportType: 'payment_details',
+        meta: {
+          companyName: 'ALMOSAFER TRAVEL & TOURISM WLL',
+          iataAccount: '7120169',
+          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
+          paymentDueDate: '22 SEP 2026'
+        },
+        items: [] 
+      },
+      almousim1: { 
+        id: 'almousim1', 
+        name: 'Almousim 1', 
+        currency: 'SAR',
+        companyCode: '1003',
+        vendorCode: '8800006',
+        province: 'ALMOUSIM-1',
+        paymentLabel: 'PAYMENTS-ALM 1',
+        iban: 'SA1111000000511201675001',
+        reportType: 'payment_details',
+        meta: {
+          companyName: 'ALMOUSIM TRAVEL AND TOURS',
+          iataAccount: '7120170',
+          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
+          paymentDueDate: '22 SEP 2026'
+        },
+        items: [] 
+      },
+      almousim2: { 
+        id: 'almousim2', 
+        name: 'Almousim 2', 
+        currency: 'SAR',
+        companyCode: '1004',
+        vendorCode: '8800007',
+        province: 'ALMOUSIM-2',
+        paymentLabel: 'PAYMENTS-ALM 2',
+        iban: 'SA2222000000511201675002',
+        reportType: 'payment_details',
+        meta: {
+          companyName: 'ALMOUSIM TRAVEL SERVICES',
+          iataAccount: '7120171',
+          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
+          paymentDueDate: '22 SEP 2026'
+        },
+        items: [] 
+      }
     };
 
-    let activeAccount = 'ksa';
+    let activeAccountKey = 'ksa';
 
-    // Initialize Page
+    // On Page Load
     document.addEventListener('DOMContentLoaded', () => {
       renderTabs();
-      renderTable();
+      renderActiveAccountData();
       setupEventListeners();
     });
 
     function renderTabs() {
-      const tabsContainer = document.getElementById('accountTabs');
-      tabsContainer.innerHTML = '';
+      const container = document.getElementById('accountTabs');
+      container.innerHTML = '';
 
       Object.keys(ACCOUNTS).forEach(key => {
         const acc = ACCOUNTS[key];
-        const isActive = key === activeAccount;
-        
+        const isActive = key === activeAccountKey;
+
         const btn = document.createElement('button');
         btn.onclick = () => switchAccount(key);
-        btn.className = `flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold text-xs transition whitespace-nowrap ${
+        btn.className = `flex items-center space-x-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition whitespace-nowrap ${
           isActive 
-            ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/50' 
+            ? 'bg-brand-600 text-white shadow-md shadow-brand-900/40' 
             : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
         }`;
 
         btn.innerHTML = `
-          <span>${acc.name} (${acc.currency})</span>
-          <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-brand-900 text-white' : 'bg-slate-900 text-slate-400'}">
-            ${acc.data.length}
+          <span>${acc.name}</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-brand-900 text-white' : 'bg-slate-900 text-slate-400'}">
+            ${acc.items.length}
           </span>
         `;
-        tabsContainer.appendChild(btn);
+        container.appendChild(btn);
       });
-
-      document.getElementById('activeAccountBadge').innerText = `${ACCOUNTS[activeAccount].name} (${ACCOUNTS[activeAccount].currency})`;
     }
 
-    function switchAccount(accKey) {
-      activeAccount = accKey;
+    function switchAccount(key) {
+      activeAccountKey = key;
       renderTabs();
-      renderTable();
+      renderActiveAccountData();
+    }
+
+    function changeReportType(val) {
+      ACCOUNTS[activeAccountKey].reportType = val;
     }
 
     function setupEventListeners() {
-      const fileInput = document.getElementById('pdfFileInput');
-      fileInput.addEventListener('change', handleFileSelect);
+      const input = document.getElementById('pdfFileInput');
+      input.addEventListener('change', handlePDFUpload);
     }
 
-    async function handleFileSelect(e) {
+    async function handlePDFUpload(e) {
       const files = e.target.files;
       if (!files.length) return;
 
@@ -267,18 +363,18 @@
       badge.classList.add('flex');
 
       for (let i = 0; i < files.length; i++) {
-        document.getElementById('processingText').innerText = `Processing file ${i + 1} of ${files.length}...`;
-        await parsePDFFile(files[i]);
+        document.getElementById('processingText').innerText = `Extracting ${files[i].name}...`;
+        await parseIATApdf(files[i]);
       }
 
       badge.classList.add('hidden');
       badge.classList.remove('flex');
       renderTabs();
-      renderTable();
-      e.target.value = ''; // Reset input
+      renderActiveAccountData();
+      e.target.value = '';
     }
 
-    async function parsePDFFile(file) {
+    async function parseIATApdf(file) {
       try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -287,174 +383,184 @@
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
           const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ');
-          fullText += pageText + '\n';
+          fullText += textContent.items.map(i => i.str).join(' ') + '\n';
         }
 
-        extractBSPDataFromText(fullText);
+        extractRemittanceData(fullText);
       } catch (err) {
-        alert('Error parsing PDF file: ' + err.message);
+        alert('PDF Parsing Error: ' + err.message);
       }
     }
 
-    function extractBSPDataFromText(text) {
-      // RegEx pattern matching Ticket Numbers (e.g., 157-1234567890 or 1234567890)
-      const ticketRegex = /(?:(\d{3})[- ]?)?(\d{10})/g;
-      const lines = text.split('\n');
+    function extractRemittanceData(text) {
+      const acc = ACCOUNTS[activeAccountKey];
 
-      let extractedCount = 0;
+      // Match Company Header Name
+      const companyMatch = text.match(/(\d{7})\s*-\s*([A-Z\s,]+(?:CO\.|WLL|LIMITED|TRAVEL))/i);
+      if (companyMatch) {
+        acc.meta.iataAccount = companyMatch[1];
+        acc.meta.companyName = companyMatch[2].trim();
+      }
 
-      lines.forEach(line => {
-        let match;
-        while ((match = ticketRegex.exec(line)) !== null) {
-          const airCode = match[1] || '001';
-          const ticketNum = match[2];
+      // Match Billing Period e.g. (08-SEP-2026 to 15-SEP-2026)
+      const periodMatch = text.match(/Billing Period[:\s]*[0-9A-Z]*\s*\(([0-9]{2}-[A-Z]{3}-[0-9]{4}\s*to\s*[0-9]{2}-[A-Z]{3}-[0-9]{4})\)/i);
+      if (periodMatch) {
+        acc.meta.billingPeriod = `(${periodMatch[1]})`;
+      }
 
-          // Parse numeric amounts following ticket pattern
-          const numbers = line.match(/[-+]?\d[\d,]*\.\d{2}/g) || [];
-          
-          const grossFare = numbers[0] ? parseFloat(numbers[0].replace(/,/g, '')) : (Math.random() * 500 + 100);
-          const taxes = numbers[1] ? parseFloat(numbers[1].replace(/,/g, '')) : (grossFare * 0.15);
-          const comm = numbers[2] ? parseFloat(numbers[2].replace(/,/g, '')) : (grossFare * 0.05);
-          const netPayable = grossFare + taxes - comm;
+      // Match Payment Due Date e.g. 22-SEP-2026
+      const dateMatch = text.match(/DATE[\s\n]+([0-9]{2}-[A-Z]{3}-[0-9]{4})/i);
+      if (dateMatch) {
+        acc.meta.paymentDueDate = dateMatch[1].replace(/-/g, ' ');
+      }
 
-          ACCOUNTS[activeAccount].data.push({
-            id: Date.now() + Math.random(),
-            date: new Date().toISOString().split('T')[0],
-            ticketNum: `${airCode}-${ticketNum}`,
-            airCode: airCode,
-            grossFare: parseFloat(grossFare.toFixed(2)),
-            taxes: parseFloat(taxes.toFixed(2)),
-            comm: parseFloat(comm.toFixed(2)),
-            netPayable: parseFloat(netPayable.toFixed(2))
-          });
-
-          extractedCount++;
-          if (extractedCount >= 10) break; // Limit mock parser per page
-        }
-      });
-
-      // Fallback fallback row generator if no rigid ticket format parsed
-      if (extractedCount === 0) {
-        ACCOUNTS[activeAccount].data.push({
-          id: Date.now(),
-          date: new Date().toISOString().split('T')[0],
-          ticketNum: '157-9823412045',
-          airCode: '157',
-          grossFare: 1250.00,
-          taxes: 187.50,
-          comm: 62.50,
-          netPayable: 1375.00
+      // Extract IATA Locations & Amounts e.g. 71-2 0061 4 ... Riyadh ... -8,161.46
+      const lineRegex = /(\d{2}-\d\s\d{4}\s\d)\s+([A-Z]{2}|HE)\s+.*?\s+([A-Za-z'\s]+?)\s+([-+]?[\d,]+\.\d{2})/g;
+      
+      let match;
+      const parsedItems = [];
+      while ((match = lineRegex.exec(text)) !== null) {
+        parsedItems.push({
+          iataNo: match[1],
+          location: match[3].trim(),
+          amount: parseFloat(match[4].replace(/,/g, ''))
         });
       }
+
+      if (parsedItems.length > 0) {
+        acc.items = parsedItems;
+      }
     }
 
-    function renderTable() {
-      const data = ACCOUNTS[activeAccount].data;
+    function renderActiveAccountData() {
+      const acc = ACCOUNTS[activeAccountKey];
+
+      // Update Metadata Display
+      document.getElementById('metaCompanyName').innerText = acc.meta.companyName;
+      document.getElementById('previewCompanyName').innerText = acc.meta.companyName;
+      document.getElementById('metaIATAAccount').innerText = acc.meta.iataAccount;
+      document.getElementById('previewIATAAcc').innerText = acc.meta.iataAccount;
+      document.getElementById('metaBillingPeriod').innerText = acc.meta.billingPeriod;
+      document.getElementById('previewBillingPeriod').innerText = acc.meta.billingPeriod;
+      document.getElementById('metaPaymentDueDate').innerText = acc.meta.paymentDueDate;
+      document.getElementById('thPaymentDueDate').innerText = acc.meta.paymentDueDate;
+
+      document.getElementById('reportTypeSelect').value = acc.reportType;
+
+      const currencySpans = document.querySelectorAll('.accountCurrencySpan');
+      currencySpans.forEach(s => s.innerText = acc.currency);
+
+      // Render Table Rows
       const tbody = document.getElementById('reportTableBody');
       const emptyState = document.getElementById('emptyState');
-
       tbody.innerHTML = '';
 
-      if (data.length === 0) {
+      if (!acc.items.length) {
         emptyState.classList.remove('hidden');
-      } else {
-        emptyState.classList.add('hidden');
+        document.getElementById('tableTotalAmount').innerText = '0.00';
+        return;
       }
 
-      let totalGross = 0, totalTaxes = 0, totalNet = 0;
+      emptyState.classList.add('hidden');
+      let total = 0;
 
-      data.forEach((row, index) => {
-        totalGross += row.grossFare;
-        totalTaxes += row.taxes;
-        totalNet += row.netPayable;
-
+      acc.items.forEach((item, index) => {
+        total += item.amount;
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/50 transition';
+        tr.className = 'hover:bg-slate-800/60 transition';
         tr.innerHTML = `
-          <td class="p-3 text-slate-500">${index + 1}</td>
-          <td class="p-3"><input type="date" value="${row.date}" onchange="updateRow(${index}, 'date', this.value)" class="bg-transparent text-slate-200 border border-transparent hover:border-slate-700 rounded px-1"></td>
-          <td class="p-3 font-mono font-medium text-brand-300"><input type="text" value="${row.ticketNum}" onchange="updateRow(${index}, 'ticketNum', this.value)" class="bg-transparent border border-transparent hover:border-slate-700 rounded px-1 w-full"></td>
-          <td class="p-3"><input type="text" value="${row.airCode}" onchange="updateRow(${index}, 'airCode', this.value)" class="bg-transparent border border-transparent hover:border-slate-700 rounded px-1 w-16"></td>
-          <td class="p-3 text-right"><input type="number" step="0.01" value="${row.grossFare}" onchange="updateRow(${index}, 'grossFare', this.value)" class="bg-transparent text-right border border-transparent hover:border-slate-700 rounded px-1 w-24 text-emerald-400 font-semibold"></td>
-          <td class="p-3 text-right"><input type="number" step="0.01" value="${row.taxes}" onchange="updateRow(${index}, 'taxes', this.value)" class="bg-transparent text-right border border-transparent hover:border-slate-700 rounded px-1 w-24 text-amber-400"></td>
-          <td class="p-3 text-right"><input type="number" step="0.01" value="${row.comm}" onchange="updateRow(${index}, 'comm', this.value)" class="bg-transparent text-right border border-transparent hover:border-slate-700 rounded px-1 w-24 text-slate-400"></td>
-          <td class="p-3 text-right font-semibold text-sky-400">${row.netPayable.toFixed(2)}</td>
-          <td class="p-3 text-center no-print">
-            <button onclick="deleteRow(${index})" class="text-slate-500 hover:text-red-400 transition p-1">
-              <i class="ph-bold ph-trash text-base"></i>
-            </button>
+          <td class="p-3 text-slate-300">
+            <input type="text" value="${item.iataNo}" onchange="updateItem(${index}, 'iataNo', this.value)" class="bg-transparent border border-transparent hover:border-slate-700 rounded px-1 w-full font-mono">
+          </td>
+          <td class="p-3 text-slate-300">
+            <input type="text" value="${item.location}" onchange="updateItem(${index}, 'location', this.value)" class="bg-transparent border border-transparent hover:border-slate-700 rounded px-1 w-full">
+          </td>
+          <td class="p-3 text-right font-bold ${item.amount < 0 ? 'text-red-400' : 'text-emerald-400'}">
+            <input type="number" step="0.01" value="${item.amount}" onchange="updateItem(${index}, 'amount', this.value)" class="bg-transparent text-right border border-transparent hover:border-slate-700 rounded px-1 w-32">
           </td>
         `;
         tbody.appendChild(tr);
       });
 
-      // Update Summary Cards
-      const curr = ACCOUNTS[activeAccount].currency;
-      document.getElementById('statTicketCount').innerText = data.length;
-      document.getElementById('statGrossFare').innerText = `${totalGross.toFixed(2)} ${curr}`;
-      document.getElementById('statTotalTaxes').innerText = `${totalTaxes.toFixed(2)} ${curr}`;
-      document.getElementById('statNetPayable').innerText = `${totalNet.toFixed(2)} ${curr}`;
+      document.getElementById('tableTotalAmount').innerText = `${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${acc.currency}`;
     }
 
-    function updateRow(index, key, val) {
-      const row = ACCOUNTS[activeAccount].data[index];
-      if (key === 'grossFare' || key === 'taxes' || key === 'comm') {
-        row[key] = parseFloat(val) || 0;
-        row.netPayable = row.grossFare + row.taxes - row.comm;
+    function updateItem(index, field, val) {
+      const item = ACCOUNTS[activeAccountKey].items[index];
+      if (field === 'amount') {
+        item.amount = parseFloat(val) || 0;
       } else {
-        row[key] = val;
+        item[field] = val;
       }
-      renderTable();
-    }
-
-    function deleteRow(index) {
-      ACCOUNTS[activeAccount].data.splice(index, 1);
-      renderTabs();
-      renderTable();
+      renderActiveAccountData();
     }
 
     function clearCurrentAccountData() {
-      if (confirm(`Are you sure you want to clear all data for ${ACCOUNTS[activeAccount].name}?`)) {
-        ACCOUNTS[activeAccount].data = [];
+      if (confirm(`Clear report data for ${ACCOUNTS[activeAccountKey].name}?`)) {
+        ACCOUNTS[activeAccountKey].items = [];
         renderTabs();
-        renderTable();
+        renderActiveAccountData();
       }
     }
 
-    function exportToExcel() {
-      const data = ACCOUNTS[activeAccount].data;
-      if (!data.length) {
-        alert('No data to export for this account.');
+    // EXPORT TO 2-TAB EXCEL (.xlsx) EXACTLY MATCHING YOUR IMAGE LAYOUT
+    function exportTwoTabExcel() {
+      const acc = ACCOUNTS[activeAccountKey];
+      if (!acc.items.length) {
+        alert('No data available to export.');
         return;
       }
 
-      const curr = ACCOUNTS[activeAccount].currency;
-      const worksheetData = [
-        [`BSP Billing Report - ${ACCOUNTS[activeAccount].name}`],
-        [`Currency: ${curr}`, `Exported Date: ${new Date().toLocaleDateString()}`],
-        [],
-        ['#', 'Issue Date', 'Ticket / Document #', 'Airline Code', `Gross Fare (${curr})`, `Taxes (${curr})`, `Commission (${curr})`, `Net Payable (${curr})`]
+      const totalAmount = acc.items.reduce((sum, item) => sum + item.amount, 0);
+
+      // --- TAB 1: LOCATION SUMMARY ---
+      const tab1Data = [
+        [acc.meta.companyName],
+        [`IATA Account: ${acc.meta.iataAccount}`],
+        [`Billing Perod: ${acc.meta.billingPeriod}`],
+        [`PAYMENT DUE ${acc.meta.paymentDueDate}`],
+        ['IATA NO.', 'Location', `Amount (${acc.currency})`]
       ];
 
-      data.forEach((row, i) => {
-        worksheetData.push([
-          i + 1,
-          row.date,
-          row.ticketNum,
-          row.airCode,
-          row.grossFare,
-          row.taxes,
-          row.comm,
-          row.netPayable
-        ]);
+      acc.items.forEach(item => {
+        tab1Data.push([item.iataNo, item.location, item.amount]);
       });
 
-      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "BSP Report");
+      tab1Data.push(['Total:', '', totalAmount]);
 
-      XLSX.writeFile(wb, `BSP_Report_${activeAccount.toUpperCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      const ws1 = XLSX.utils.aoa_to_sheet(tab1Data);
+
+      // Format Tab 1 Column Widths
+      ws1['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 18 }];
+
+      // --- TAB 2: VENDOR POSTING SUMMARY ---
+      const periodShort = acc.meta.billingPeriod.replace(/[()]/g, '').replace(' to ', ' ');
+
+      const tab2Data = [
+        [acc.meta.companyName],
+        [`IATA Account: ${acc.meta.iataAccount}`],
+        [`Billing Perod: ${acc.meta.billingPeriod}`],
+        ['COMPANY CODE', 'VENDOR', 'PROVINCE', 'PERIOD', `PAYMENTS-${acc.name.toUpperCase()}`, 'BANK IBAN NO'],
+        [acc.companyCode, acc.vendorCode, acc.province, periodShort, totalAmount, acc.iban],
+        ['', '', '', '', '', 'BIC/SWIFT-SABBSARI'],
+        ['', '', '', '', '', 'BENEFICIARY NAME'],
+        ['', '', '', '', '', 'IATA BSP HINGE'],
+        ['', '', '', '', '', 'BANK NAME:'],
+        ['', '', '', '', '', 'SAUDI AWWAL BANK(SAB)']
+      ];
+
+      const ws2 = XLSX.utils.aoa_to_sheet(tab2Data);
+
+      // Format Tab 2 Column Widths
+      ws2['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 20 }, { wch: 22 }, { wch: 32 }];
+
+      // Create Workbook & Append both Tabs
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws1, "Location Summary");
+      XLSX.utils.book_append_sheet(wb, ws2, "Vendor Posting Summary");
+
+      // Save File
+      XLSX.writeFile(wb, `Payment_Details_${acc.id.toUpperCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
   </script>
 </body>
