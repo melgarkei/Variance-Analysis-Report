@@ -372,6 +372,16 @@
       }
     }
 
+    function cleanLocationName(rawLoc) {
+      if (!rawLoc) return '';
+      // Strip out "INTERNATIONAL TRAVEL AND TOURISM CO" or similar trailing company strings
+      return rawLoc
+        .replace(/INTERNATIONAL\s+TRAVEL\s+(AND|&)\s+TOURISM\s+(CO\.|COMPANY|CO)?/gi, '')
+        .replace(/TRAVEL\s+(AND|&)\s+TOURISM\s+(CO\.|COMPANY|CO)?/gi, '')
+        .replace(/ALMOSAFER/gi, '')
+        .trim();
+    }
+
     function extractRemittanceData(text) {
       const acc = ACCOUNTS[activeAccountKey];
 
@@ -388,21 +398,22 @@
         acc.meta.billingPeriod = `(${periodMatch[1]})`;
       }
 
-      // Exact Due Date Extraction from Remittance Table DATE column (e.g., 22-SEP-2026)
+      // Due Date Extraction
       const dueDateMatch = text.match(/(?:REMITTANCE TOTAL|BSP TOTAL)[\s\S]*?(\d{2}-[A-Z]{3}-\d{4})/i);
       if (dueDateMatch) {
         acc.meta.paymentDueDate = dueDateMatch[1].replace(/-/g, ' ');
       }
 
-      // Exact Location and Amount extraction matching Agent Code table
+      // Extract IATA Location & Remittance Amounts
       const lineRegex = /(\d{2}-\d\s\d{4}\s\d)\s+([A-Z]{2}|HE)\s+.*?\s+([A-Za-z'\s]+?)\s+([-+]?[\d,]+\.\d{2})/g;
       
       let match;
       const parsedItems = [];
       while ((match = lineRegex.exec(text)) !== null) {
+        const cleanedLoc = cleanLocationName(match[3]);
         parsedItems.push({
           iataNo: match[1],
-          location: match[3].trim(),
+          location: cleanedLoc || match[3].trim(),
           amount: parseFloat(match[4].replace(/,/g, ''))
         });
       }
@@ -482,7 +493,7 @@
       }
     }
 
-    // HIGHLY STYLED DUAL-TAB EXCEL EXPORT (EXCELJS ENGINE)
+    // HIGHLY AESTHETIC STYLED DUAL-TAB EXCEL EXPORT (EXCELJS ENGINE)
     async function exportTwoTabExcel() {
       const acc = ACCOUNTS[activeAccountKey];
       if (!acc.items.length) {
@@ -492,41 +503,50 @@
 
       const workbook = new ExcelJS.Workbook();
 
+      // Palette
+      const tealHeaderColor = 'FF006778';
+      const redHeaderColor = 'FFFF0000';
+      const lightRowColor = 'FFF8FAFC';
+      const totalFillColor = 'FFD9D2E9';
+
       // ==========================================
       // TAB 1: LOCATION SUMMARY
       // ==========================================
       const ws1 = workbook.addWorksheet('Location Summary', { views: [{ showGridLines: true }] });
 
-      // Title Block
+      // Title Banner
       const r1 = ws1.addRow([acc.meta.companyName]);
       const r2 = ws1.addRow([`IATA Account: ${acc.meta.iataAccount}`]);
       const r3 = ws1.addRow([`Billing Perod: ${acc.meta.billingPeriod}`]);
       const r4 = ws1.addRow([`PAYMENT DUE ${acc.meta.paymentDueDate}`]);
 
-      // Style Header Info
       [r1, r2, r3, r4].forEach(row => {
         ws1.mergeCells(row.number, 1, row.number, 3);
         const cell = row.getCell(1);
-        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFF0000' }, underline: true };
+        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: redHeaderColor }, underline: true };
         cell.alignment = { horizontal: 'center' };
       });
 
-      // Headers
+      // Header Row
       const h1 = ws1.addRow(['IATA NO.', 'Location', `Amount (${acc.currency})`]);
       h1.eachCell(cell => {
-        cell.font = { name: 'Calibri', size: 10, bold: true, italic: true };
+        cell.font = { name: 'Calibri', size: 11, bold: true, italic: true };
         cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
         cell.alignment = { horizontal: cell.col === 3 ? 'right' : 'left' };
       });
 
-      // Items Data
-      acc.items.forEach(item => {
+      // Data Rows
+      acc.items.forEach((item, idx) => {
         const row = ws1.addRow([item.iataNo, item.location, item.amount]);
         row.getCell(1).alignment = { horizontal: 'left' };
         row.getCell(2).alignment = { horizontal: 'left' };
         row.getCell(3).alignment = { horizontal: 'right' };
         row.getCell(3).numFmt = '#,##0.00';
+
         row.eachCell(cell => {
+          if (idx % 2 === 1) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: lightRowColor } };
+          }
           cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
         });
       });
@@ -546,7 +566,7 @@
       totCellValue.alignment = { horizontal: 'right' };
 
       totalRow.eachCell(cell => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D2E9' } }; // Purple Accent Fill
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: totalFillColor } };
         cell.border = { top: { style: 'thin' }, bottom: { style: 'double' }, left: { style: 'thin' }, right: { style: 'thin' } };
       });
 
@@ -566,7 +586,7 @@
       [t2_r1, t2_r2, t2_r3].forEach(row => {
         ws2.mergeCells(row.number, 1, row.number, 6);
         const cell = row.getCell(1);
-        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFF0000' }, underline: true };
+        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: redHeaderColor }, underline: true };
         cell.alignment = { horizontal: 'center' };
       });
 
@@ -574,7 +594,8 @@
 
       const vHeader = ws2.addRow(['COMPANY CODE', 'VENDOR', 'PROVINCE', 'PERIOD', `PAYMENTS-${acc.name.toUpperCase()}`, 'BANK IBAN NO']);
       vHeader.eachCell(cell => {
-        cell.font = { name: 'Calibri', size: 10, bold: true };
+        cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: tealHeaderColor } };
         cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
         cell.alignment = { horizontal: 'center' };
       });
@@ -582,6 +603,7 @@
       const vData = ws2.addRow([acc.companyCode, acc.vendorCode, acc.province, periodShort, totalAmount, acc.iban]);
       vData.getCell(5).numFmt = '#,##0.00';
       vData.eachCell(cell => {
+        cell.font = { name: 'Calibri', size: 10, bold: true };
         cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
         cell.alignment = { horizontal: 'center' };
       });
@@ -597,8 +619,9 @@
 
       bankDetails.forEach(detail => {
         const row = ws2.addRow(['', '', '', '', '', detail]);
-        row.getCell(6).border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
-        row.getCell(6).font = { name: 'Calibri', size: 10 };
+        const cell = row.getCell(6);
+        cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+        cell.font = { name: 'Calibri', size: 10 };
       });
 
       ws2.getColumn(1).width = 18;
@@ -608,7 +631,7 @@
       ws2.getColumn(5).width = 24;
       ws2.getColumn(6).width = 34;
 
-      // Write to Blob & Download
+      // Download File
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
