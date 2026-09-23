@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en" class="h-full bg-slate-50 text-slate-800">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,11 +55,11 @@
       th, td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 11px; }
     }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #002830; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #006778; border-radius: 4px; }
   </style>
 </head>
-<body class="h-full flex flex-col font-sans antialiased bg-slate-950 text-slate-100">
+<body class="h-full flex flex-col font-sans antialiased bg-slate-50 text-slate-800">
 
   <!-- Top Navigation Header with Almosafer Teal Theme -->
   <header class="bg-almosafer-900 border-b border-almosafer-800 sticky top-0 z-30 no-print">
@@ -68,7 +68,7 @@
         
         <!-- Brand Logo & Title -->
         <div class="flex items-center space-x-3">
-          <div class="bg-almosafer-600 p-2.5 rounded-lg text-white shadow-md shadow-almosafer-900/50 flex items-center justify-center">
+          <div class="bg-almosafer-600 p-2.5 rounded-lg text-white shadow-md flex items-center justify-center">
             <i class="ph-bold ph-airplane text-2xl"></i>
           </div>
           <div>
@@ -76,17 +76,17 @@
               <h1 class="text-lg font-black tracking-wider text-white uppercase">Almosafer</h1>
               <span class="text-xs px-2 py-0.5 rounded bg-coral-500 text-white font-bold tracking-widest">BSP</span>
             </div>
-            <p class="text-xs text-almosafer-100/70 font-medium">Payment Details Extractor (FCGRREMSUM)</p>
+            <p class="text-xs text-almosafer-100/80 font-medium">Payment Details Extractor (FCGRREMSUM)</p>
           </div>
         </div>
 
         <!-- Action Controls -->
         <div class="flex items-center space-x-3">
-          <button onclick="exportTwoTabExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-emerald-900/20">
+          <button onclick="exportTwoTabExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition shadow-md">
             <i class="ph-bold ph-file-xls text-lg"></i>
             <span>Export 2-Tab Excel (.xlsx)</span>
           </button>
-          <button onclick="window.print()" class="bg-almosafer-800 hover:bg-almosafer-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 border border-almosafer-700 transition">
+          <button onclick="window.print()" class="bg-almosafer-800 hover:bg-almosafer-700 text-slate-100 px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 border border-almosafer-700 transition">
             <i class="ph-bold ph-printer text-lg"></i>
             <span>Print</span>
           </button>
@@ -97,7 +97,7 @@
   </header>
 
   <!-- Account Selector Tabs & Dropdown Bar -->
-  <div class="bg-almosafer-900/90 border-b border-almosafer-800 sticky top-16 z-20 no-print backdrop-blur">
+  <div class="bg-white border-b border-slate-200 sticky top-16 z-20 no-print shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between py-3 gap-3">
       
       <!-- Account Tabs -->
@@ -107,8 +107,8 @@
 
       <!-- Report Type Dropdown -->
       <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
-        <label for="reportTypeSelect" class="text-xs text-almosafer-100/70 font-medium whitespace-nowrap">Selected Report:</label>
-        <select id="reportTypeSelect" onchange="changeReportType(this.value)" class="bg-almosafer-800 border border-almosafer-700 text-white text-xs rounded-lg p-2 focus:ring-coral-500 focus:border-coral-500 font-semibold min-w-[200px]">
+        <label for="reportTypeSelect" class="text-xs text-slate-500 font-medium whitespace-nowrap">Selected Report:</label>
+        <select id="reportTypeSelect" onchange="changeReportType(this.value)" class="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-2 focus:ring-coral-500 focus:border-coral-500 font-semibold min-w-[200px]">
           <option value="payment_details">Payment Details Report</option>
         </select>
       </div>
@@ -119,18 +119,18 @@
   <!-- Main Body Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Upload PDF Box with Almosafer Teal Hover Border -->
-    <div class="bg-almosafer-900/60 rounded-xl border-2 border-dashed border-almosafer-700 p-6 text-center hover:border-coral-500 transition-colors relative no-print cursor-pointer" id="dropZone">
+    <!-- Upload PDF Box -->
+    <div class="bg-white rounded-xl border-2 border-dashed border-slate-300 p-6 text-center hover:border-almosafer-600 transition-colors relative no-print cursor-pointer shadow-sm" id="dropZone">
       <input type="file" id="pdfFileInput" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple>
       <div class="flex flex-col items-center justify-center space-y-2">
-        <div class="p-3 bg-almosafer-800 rounded-full text-coral-500 shadow-md">
+        <div class="p-3 bg-almosafer-50 rounded-full text-almosafer-600">
           <i class="ph-duotone ph-upload-simple text-3xl"></i>
         </div>
         <div>
-          <p class="text-sm font-semibold text-white">Click or Drag & Drop IATA BSP PDF (FCGRREMSUM) here</p>
-          <p class="text-xs text-almosafer-100/60 mt-1">Parses Company Name, IATA Account, Billing Period, Remittance Date, Locations, and Amounts</p>
+          <p class="text-sm font-semibold text-slate-800">Click or Drag & Drop IATA BSP PDF (FCGRREMSUM) here</p>
+          <p class="text-xs text-slate-500 mt-1">Parses Company Name, IATA Account, Billing Period, Remittance Date, Locations, and Amounts</p>
         </div>
-        <div id="fileProcessingBadge" class="hidden items-center space-x-2 text-xs bg-coral-500/20 text-coral-400 px-3 py-1 rounded-full border border-coral-500/40">
+        <div id="fileProcessingBadge" class="hidden items-center space-x-2 text-xs bg-almosafer-50 text-almosafer-700 px-3 py-1 rounded-full border border-almosafer-200">
           <i class="ph-bold ph-spinner animate-spin"></i>
           <span id="processingText">Processing PDF...</span>
         </div>
@@ -139,39 +139,39 @@
 
     <!-- Metadata Header Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="metadataHeader">
-      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
-        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">Company Name</p>
-        <p class="text-sm font-extrabold text-coral-500 mt-1 uppercase truncate" id="metaCompanyName">---</p>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-400 uppercase">Company Name</p>
+        <p class="text-sm font-extrabold text-coral-600 mt-1 uppercase truncate" id="metaCompanyName">---</p>
       </div>
 
-      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
-        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">IATA Account No.</p>
-        <p class="text-sm font-extrabold text-coral-500 mt-1 font-mono" id="metaIATAAccount">---</p>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-400 uppercase">IATA Account No.</p>
+        <p class="text-sm font-extrabold text-coral-600 mt-1 font-mono" id="metaIATAAccount">---</p>
       </div>
 
-      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
-        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">Billing Period</p>
-        <p class="text-sm font-extrabold text-coral-500 mt-1" id="metaBillingPeriod">---</p>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-400 uppercase">Billing Period</p>
+        <p class="text-sm font-extrabold text-coral-600 mt-1" id="metaBillingPeriod">---</p>
       </div>
 
-      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
-        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">Payment Due Date</p>
-        <p class="text-sm font-extrabold text-white mt-1 uppercase" id="metaPaymentDueDate">---</p>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-400 uppercase">Payment Due Date</p>
+        <p class="text-sm font-extrabold text-slate-800 mt-1 uppercase" id="metaPaymentDueDate">---</p>
       </div>
     </div>
 
     <!-- Report Data Preview Box -->
-    <div class="bg-almosafer-900/80 rounded-xl border border-almosafer-800 overflow-hidden shadow-2xl" id="printable-area">
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm" id="printable-area">
       
       <!-- Report Header -->
-      <div class="p-4 border-b border-almosafer-800 bg-almosafer-900 flex justify-between items-center">
+      <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
         <div>
-          <h2 class="text-base font-extrabold text-coral-500 uppercase tracking-wide" id="previewCompanyName">NO REPORT LOADED</h2>
-          <p class="text-xs font-bold text-coral-400/90 mt-0.5">IATA Account: <span id="previewIATAAcc">---</span></p>
-          <p class="text-xs font-bold text-coral-400/90">Billing Period: <span id="previewBillingPeriod">---</span></p>
+          <h2 class="text-base font-extrabold text-coral-600 uppercase tracking-wide" id="previewCompanyName">NO REPORT LOADED</h2>
+          <p class="text-xs font-bold text-coral-600 mt-0.5">IATA Account: <span id="previewIATAAcc">---</span></p>
+          <p class="text-xs font-bold text-coral-600">Billing Period: <span id="previewBillingPeriod">---</span></p>
         </div>
         <div class="text-right no-print">
-          <button onclick="clearCurrentAccountData()" class="text-xs bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-800/80 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+          <button onclick="clearCurrentAccountData()" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
             <i class="ph-bold ph-trash"></i>
             <span>Clear Report Data</span>
           </button>
@@ -180,36 +180,36 @@
 
       <!-- Table Content -->
       <div class="overflow-x-auto custom-scrollbar">
-        <table class="w-full text-left text-sm text-slate-200">
-          <thead class="bg-almosafer-800 text-xs uppercase font-bold text-almosafer-100 border-b border-almosafer-700">
+        <table class="w-full text-left text-sm text-slate-700">
+          <thead class="bg-almosafer-600 text-xs uppercase font-bold text-white">
             <tr>
-              <th class="p-3 text-center bg-almosafer-800/90 font-black text-white underline tracking-wider" colspan="3" id="tableHeaderDueTitle">
+              <th class="p-3 text-center bg-almosafer-700 font-black text-white underline tracking-wider" colspan="3" id="tableHeaderDueTitle">
                 PAYMENT DUE <span id="thPaymentDueDate">---</span>
               </th>
             </tr>
-            <tr class="bg-almosafer-900/90 text-almosafer-100/80">
+            <tr class="bg-almosafer-600 text-white">
               <th class="p-3 italic font-serif">IATA NO.</th>
               <th class="p-3 italic font-serif">Location</th>
               <th class="p-3 italic font-serif text-right">Amount (<span class="accountCurrencySpan">SAR</span>)</th>
             </tr>
           </thead>
-          <tbody id="reportTableBody" class="divide-y divide-almosafer-800/60 font-mono text-xs">
+          <tbody id="reportTableBody" class="divide-y divide-slate-200 font-mono text-xs">
             <!-- Dynamic Rows -->
           </tbody>
-          <tfoot class="bg-almosafer-950 border-t-2 border-almosafer-600 font-bold">
+          <tfoot class="bg-slate-100 border-t-2 border-slate-300 font-bold">
             <tr>
-              <td class="p-3 text-right text-slate-300" colspan="2">Total:</td>
-              <td class="p-3 text-right text-coral-400 font-black text-sm" id="tableTotalAmount">0.00</td>
+              <td class="p-3 text-right text-slate-600" colspan="2">Total:</td>
+              <td class="p-3 text-right text-coral-600 font-black text-sm" id="tableTotalAmount">0.00</td>
             </tr>
           </tfoot>
         </table>
       </div>
 
       <!-- Empty State -->
-      <div id="emptyState" class="py-12 text-center text-almosafer-100/40">
-        <i class="ph-duotone ph-file-x text-5xl mb-2 text-almosafer-600"></i>
-        <p class="text-sm font-medium">No report data uploaded for this account tab yet.</p>
-        <p class="text-xs text-almosafer-100/30 mt-1">Upload an IATA BSP PDF file above to parse numbers automatically.</p>
+      <div id="emptyState" class="py-12 text-center text-slate-400">
+        <i class="ph-duotone ph-file-x text-5xl mb-2 text-slate-300"></i>
+        <p class="text-sm font-medium text-slate-600">No report data uploaded for this account tab yet.</p>
+        <p class="text-xs text-slate-400 mt-1">Upload an IATA BSP PDF file above to parse numbers automatically.</p>
       </div>
     </div>
 
@@ -305,13 +305,13 @@
         btn.onclick = () => switchAccount(key);
         btn.className = `flex items-center space-x-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition whitespace-nowrap ${
           isActive 
-            ? 'bg-almosafer-600 text-white shadow-md shadow-almosafer-900/50 ring-1 ring-coral-500' 
-            : 'bg-almosafer-800/80 text-almosafer-100/70 hover:bg-almosafer-700 hover:text-white'
+            ? 'bg-almosafer-600 text-white shadow-sm font-bold' 
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
         }`;
 
         btn.innerHTML = `
           <span>${acc.name}</span>
-          <span class="px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-coral-500 text-white font-bold' : 'bg-almosafer-900 text-almosafer-100/50'}">
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-coral-500 text-white font-bold' : 'bg-slate-200 text-slate-500'}">
             ${acc.items.length}
           </span>
         `;
@@ -441,16 +441,16 @@
       acc.items.forEach((item, index) => {
         total += item.amount;
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-almosafer-800/40 transition';
+        tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
-          <td class="p-3 text-slate-300">
-            <input type="text" value="${item.iataNo}" onchange="updateItem(${index}, 'iataNo', this.value)" class="bg-transparent border border-transparent hover:border-almosafer-700 rounded px-1 w-full font-mono">
+          <td class="p-3 text-slate-700">
+            <input type="text" value="${item.iataNo}" onchange="updateItem(${index}, 'iataNo', this.value)" class="bg-transparent border border-transparent hover:border-slate-300 rounded px-1 w-full font-mono">
           </td>
-          <td class="p-3 text-slate-300">
-            <input type="text" value="${item.location}" onchange="updateItem(${index}, 'location', this.value)" class="bg-transparent border border-transparent hover:border-almosafer-700 rounded px-1 w-full">
+          <td class="p-3 text-slate-700">
+            <input type="text" value="${item.location}" onchange="updateItem(${index}, 'location', this.value)" class="bg-transparent border border-transparent hover:border-slate-300 rounded px-1 w-full">
           </td>
-          <td class="p-3 text-right font-bold ${item.amount < 0 ? 'text-coral-400' : 'text-emerald-400'}">
-            <input type="number" step="0.01" value="${item.amount}" onchange="updateItem(${index}, 'amount', this.value)" class="bg-transparent text-right border border-transparent hover:border-almosafer-700 rounded px-1 w-32">
+          <td class="p-3 text-right font-bold ${item.amount < 0 ? 'text-coral-600' : 'text-emerald-600'}">
+            <input type="number" step="0.01" value="${item.amount}" onchange="updateItem(${index}, 'amount', this.value)" class="bg-transparent text-right border border-transparent hover:border-slate-300 rounded px-1 w-32">
           </td>
         `;
         tbody.appendChild(tr);
