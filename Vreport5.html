@@ -1074,11 +1074,17 @@
                 const members = TEAM_STRUCTURE[leader];
                 let leaderProj = aggregatedData[leader] ? aggregatedData[leader].projected : 0;
                 let leaderAct = aggregatedData[leader] ? aggregatedData[leader].actual : 0;
+                let leaderByCurr = aggregatedData[leader] ? { ...aggregatedData[leader].byCurr } : {};
 
                 members.forEach(m => {
                     if (aggregatedData[m]) {
                         leaderProj += aggregatedData[m].projected;
                         leaderAct += aggregatedData[m].actual;
+                        Object.keys(aggregatedData[m].byCurr).forEach(c => {
+                            if (!leaderByCurr[c]) leaderByCurr[c] = { projected: 0, actual: 0 };
+                            leaderByCurr[c].projected += aggregatedData[m].byCurr[c].projected;
+                            leaderByCurr[c].actual += aggregatedData[m].byCurr[c].actual;
+                        });
                     }
                 });
 
@@ -1086,8 +1092,8 @@
                 const lBadge = getStatusBadge(leaderProj, leaderAct);
 
                 tbody.innerHTML += `
-                    <tr class="leader-row" onclick="toggleLeaderGroup('${leader}')">
-                        <td><b><span id="icon-${leader}" style="margin-right:8px;">▶</span>${leader}</b></td>
+                    <tr class="${currMode === 'Local' ? 'cat-header-row' : ''} leader-row" onclick="toggleLeaderGroup('${leader}')">
+                        <td><b><span id="icon-${leader}" style="margin-right:8px;">▶</span>${leader}${currMode === 'Local' ? ' (Subtotal)' : ''}</b></td>
                         <td class="num-col">${formatCurrency(leaderProj, targetGrandCurr)}</td>
                         <td class="num-col">${formatCurrency(leaderAct, targetGrandCurr)}</td>
                         <td class="num-col">${formatCurrency(Math.abs(lDiff), targetGrandCurr)}</td>
@@ -1095,6 +1101,22 @@
                         <td style="text-align: center;"><span class="status-badge ${lBadge.cssClass}">${lBadge.text}</span></td>
                     </tr>`;
                 renderedOwners.add(leader);
+
+                if (currMode === "Local") {
+                    Object.keys(leaderByCurr).forEach(curr => {
+                        const subProj = leaderByCurr[curr].projected, subAct = leaderByCurr[curr].actual, subDiff = subProj - subAct;
+                        const subBadge = getStatusBadge(subProj, subAct);
+                        tbody.innerHTML += `
+                            <tr class="sub-curr-row member-row team-${leader}">
+                                <td>${curr}</td>
+                                <td class="num-col">${formatCurrency(subProj, curr)}</td>
+                                <td class="num-col">${formatCurrency(subAct, curr)}</td>
+                                <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
+                                <td class="num-col">${formatPercent(subProj, subAct)}</td>
+                                <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
+                            </tr>`;
+                    });
+                }
 
                 members.forEach(m => {
                     if (aggregatedData[m]) {
@@ -1110,6 +1132,22 @@
                                 <td class="num-col">${formatPercent(mObj.projected, mObj.actual)}</td>
                                 <td style="text-align: center;"><span class="status-badge ${mBadge.cssClass}">${mBadge.text}</span></td>
                             </tr>`;
+
+                        if (currMode === "Local") {
+                            Object.keys(mObj.byCurr).forEach(curr => {
+                                const subProj = mObj.byCurr[curr].projected, subAct = mObj.byCurr[curr].actual, subDiff = subProj - subAct;
+                                const subBadge = getStatusBadge(subProj, subAct);
+                                tbody.innerHTML += `
+                                    <tr class="sub-curr-row member-row team-${leader}">
+                                        <td style="padding-left: 48px;">${curr}</td>
+                                        <td class="num-col">${formatCurrency(subProj, curr)}</td>
+                                        <td class="num-col">${formatCurrency(subAct, curr)}</td>
+                                        <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
+                                        <td class="num-col">${formatPercent(subProj, subAct)}</td>
+                                        <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
+                                    </tr>`;
+                            });
+                        }
                         renderedOwners.add(m);
                     }
                 });
@@ -1120,15 +1158,42 @@
                     const catObj = aggregatedData[key];
                     const proj = catObj.projected, act = catObj.actual, diff = proj - act;
                     const badge = getStatusBadge(proj, act);
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><b>${key}</b></td>
-                            <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
-                            <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
-                            <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
-                            <td class="num-col">${formatPercent(proj, act)}</td>
-                            <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
-                        </tr>`;
+
+                    if (currMode === "SAR") {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><b>${key}</b></td>
+                                <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
+                                <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
+                                <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
+                                <td class="num-col">${formatPercent(proj, act)}</td>
+                                <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                            </tr>`;
+                    } else {
+                        tbody.innerHTML += `
+                            <tr class="cat-header-row">
+                                <td><b>${key} (Subtotal)</b></td>
+                                <td class="num-col">${formatCurrency(proj, targetGrandCurr)}</td>
+                                <td class="num-col">${formatCurrency(act, targetGrandCurr)}</td>
+                                <td class="num-col">${formatCurrency(Math.abs(diff), targetGrandCurr)}</td>
+                                <td class="num-col">${formatPercent(proj, act)}</td>
+                                <td style="text-align: center;"><span class="status-badge ${badge.cssClass}">${badge.text}</span></td>
+                            </tr>`;
+
+                        Object.keys(catObj.byCurr).forEach(curr => {
+                            const subProj = catObj.byCurr[curr].projected, subAct = catObj.byCurr[curr].actual, subDiff = subProj - subAct;
+                            const subBadge = getStatusBadge(subProj, subAct);
+                            tbody.innerHTML += `
+                                <tr class="sub-curr-row">
+                                    <td>${curr}</td>
+                                    <td class="num-col">${formatCurrency(subProj, curr)}</td>
+                                    <td class="num-col">${formatCurrency(subAct, curr)}</td>
+                                    <td class="num-col">${formatCurrency(Math.abs(subDiff), curr)}</td>
+                                    <td class="num-col">${formatPercent(subProj, subAct)}</td>
+                                    <td style="text-align: center;"><span class="status-badge ${subBadge.cssClass}">${subBadge.text}</span></td>
+                                </tr>`;
+                        });
+                    }
                 }
             });
 
