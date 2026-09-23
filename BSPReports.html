@@ -12,13 +12,20 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1',
-              900: '#0c4a6e'
+            almosafer: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              400: '#2dd4bf',
+              500: '#00838f', // Primary Teal Accent
+              600: '#006778', // Signature Almosafer Teal Blue
+              700: '#004f5d', // Dark Teal
+              800: '#003a45',
+              900: '#002830'
+            },
+            coral: {
+              400: '#ff8585',
+              500: '#ff6a6a', // Signature Almosafer Coral Pink Accent
+              600: '#e55353'
             }
           }
         }
@@ -48,25 +55,28 @@
       th, td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 11px; }
     }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #002830; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #006778; border-radius: 4px; }
   </style>
 </head>
 <body class="h-full flex flex-col font-sans antialiased bg-slate-950 text-slate-100">
 
-  <!-- Top Navigation Header -->
-  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 no-print">
+  <!-- Top Navigation Header with Almosafer Teal Theme -->
+  <header class="bg-almosafer-900 border-b border-almosafer-800 sticky top-0 z-30 no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         
-        <!-- Logo & Title -->
+        <!-- Brand Logo & Title -->
         <div class="flex items-center space-x-3">
-          <div class="bg-brand-600 p-2 rounded-lg text-white">
-            <i class="ph-bold ph-file-pdf text-2xl"></i>
+          <div class="bg-almosafer-600 p-2.5 rounded-lg text-white shadow-md shadow-almosafer-900/50 flex items-center justify-center">
+            <i class="ph-bold ph-airplane text-2xl"></i>
           </div>
           <div>
-            <h1 class="text-lg font-bold text-white tracking-tight">BSP Payment Details Extractor</h1>
-            <p class="text-xs text-slate-400">Agent Group Remittance Summary (FCGRREMSUM)</p>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg font-black tracking-wider text-white uppercase">Almosafer</h1>
+              <span class="text-xs px-2 py-0.5 rounded bg-coral-500 text-white font-bold tracking-widest">BSP</span>
+            </div>
+            <p class="text-xs text-almosafer-100/70 font-medium">Payment Details Extractor (FCGRREMSUM)</p>
           </div>
         </div>
 
@@ -76,7 +86,7 @@
             <i class="ph-bold ph-file-xls text-lg"></i>
             <span>Export 2-Tab Excel (.xlsx)</span>
           </button>
-          <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 border border-slate-700 transition">
+          <button onclick="window.print()" class="bg-almosafer-800 hover:bg-almosafer-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 border border-almosafer-700 transition">
             <i class="ph-bold ph-printer text-lg"></i>
             <span>Print</span>
           </button>
@@ -87,7 +97,7 @@
   </header>
 
   <!-- Account Selector Tabs & Dropdown Bar -->
-  <div class="bg-slate-900/90 border-b border-slate-800 sticky top-16 z-20 no-print backdrop-blur">
+  <div class="bg-almosafer-900/90 border-b border-almosafer-800 sticky top-16 z-20 no-print backdrop-blur">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between py-3 gap-3">
       
       <!-- Account Tabs -->
@@ -97,8 +107,8 @@
 
       <!-- Report Type Dropdown -->
       <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
-        <label for="reportTypeSelect" class="text-xs text-slate-400 font-medium whitespace-nowrap">Selected Report:</label>
-        <select id="reportTypeSelect" onchange="changeReportType(this.value)" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg p-2 focus:ring-brand-500 focus:border-brand-500 font-semibold min-w-[200px]">
+        <label for="reportTypeSelect" class="text-xs text-almosafer-100/70 font-medium whitespace-nowrap">Selected Report:</label>
+        <select id="reportTypeSelect" onchange="changeReportType(this.value)" class="bg-almosafer-800 border border-almosafer-700 text-white text-xs rounded-lg p-2 focus:ring-coral-500 focus:border-coral-500 font-semibold min-w-[200px]">
           <option value="payment_details">Payment Details Report</option>
         </select>
       </div>
@@ -109,104 +119,104 @@
   <!-- Main Body Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Upload PDF Box -->
-    <div class="bg-slate-900 rounded-xl border-2 border-dashed border-slate-700 p-6 text-center hover:border-brand-500 transition-colors relative no-print cursor-pointer" id="dropZone">
+    <!-- Upload PDF Box with Almosafer Teal Hover Border -->
+    <div class="bg-almosafer-900/60 rounded-xl border-2 border-dashed border-almosafer-700 p-6 text-center hover:border-coral-500 transition-colors relative no-print cursor-pointer" id="dropZone">
       <input type="file" id="pdfFileInput" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple>
       <div class="flex flex-col items-center justify-center space-y-2">
-        <div class="p-3 bg-slate-800 rounded-full text-brand-500">
+        <div class="p-3 bg-almosafer-800 rounded-full text-coral-500 shadow-md">
           <i class="ph-duotone ph-upload-simple text-3xl"></i>
         </div>
         <div>
           <p class="text-sm font-semibold text-white">Click or Drag & Drop IATA BSP PDF (FCGRREMSUM) here</p>
-          <p class="text-xs text-slate-400 mt-1">Parses Company Name, IATA Account, Billing Period, Remittance Date, Locations, and Amounts</p>
+          <p class="text-xs text-almosafer-100/60 mt-1">Parses Company Name, IATA Account, Billing Period, Remittance Date, Locations, and Amounts</p>
         </div>
-        <div id="fileProcessingBadge" class="hidden items-center space-x-2 text-xs bg-brand-900/50 text-brand-300 px-3 py-1 rounded-full border border-brand-700">
+        <div id="fileProcessingBadge" class="hidden items-center space-x-2 text-xs bg-coral-500/20 text-coral-400 px-3 py-1 rounded-full border border-coral-500/40">
           <i class="ph-bold ph-spinner animate-spin"></i>
           <span id="processingText">Processing PDF...</span>
         </div>
       </div>
     </div>
 
-    <!-- Metadata Cards Header -->
+    <!-- Metadata Header Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="metadataHeader">
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400">Company Name</p>
-        <p class="text-sm font-bold text-red-400 mt-1 uppercase truncate" id="metaCompanyName">ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.</p>
+      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
+        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">Company Name</p>
+        <p class="text-sm font-extrabold text-coral-500 mt-1 uppercase truncate" id="metaCompanyName">---</p>
       </div>
 
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400">IATA Account No.</p>
-        <p class="text-sm font-bold text-red-400 mt-1 font-mono" id="metaIATAAccount">7120167</p>
+      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
+        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">IATA Account No.</p>
+        <p class="text-sm font-extrabold text-coral-500 mt-1 font-mono" id="metaIATAAccount">---</p>
       </div>
 
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400">Billing Period</p>
-        <p class="text-sm font-bold text-red-400 mt-1" id="metaBillingPeriod">(08-SEP-2026 to 15-SEP-2026)</p>
+      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
+        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">Billing Period</p>
+        <p class="text-sm font-extrabold text-coral-500 mt-1" id="metaBillingPeriod">---</p>
       </div>
 
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400">Payment Due Date</p>
-        <p class="text-sm font-bold text-white mt-1 uppercase" id="metaPaymentDueDate">22 SEP 2026</p>
+      <div class="bg-almosafer-900/80 p-4 rounded-xl border border-almosafer-800 shadow-lg">
+        <p class="text-xs font-semibold text-almosafer-100/60 uppercase">Payment Due Date</p>
+        <p class="text-sm font-extrabold text-white mt-1 uppercase" id="metaPaymentDueDate">---</p>
       </div>
     </div>
 
-    <!-- Report Data View (Matches Attached Excel Preview) -->
-    <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-xl" id="printable-area">
+    <!-- Report Data Preview Box -->
+    <div class="bg-almosafer-900/80 rounded-xl border border-almosafer-800 overflow-hidden shadow-2xl" id="printable-area">
       
-      <!-- Printable Header Title -->
-      <div class="p-4 border-b border-slate-800 bg-slate-900 flex justify-between items-center">
+      <!-- Report Header -->
+      <div class="p-4 border-b border-almosafer-800 bg-almosafer-900 flex justify-between items-center">
         <div>
-          <h2 class="text-base font-bold text-red-500 uppercase tracking-wide" id="previewCompanyName">ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.</h2>
-          <p class="text-xs font-bold text-red-400 mt-0.5">IATA Account: <span id="previewIATAAcc">7120167</span></p>
-          <p class="text-xs font-bold text-red-400">Billing Period: <span id="previewBillingPeriod">(08-SEP-2026 to 15-SEP-2026)</span></p>
+          <h2 class="text-base font-extrabold text-coral-500 uppercase tracking-wide" id="previewCompanyName">NO REPORT LOADED</h2>
+          <p class="text-xs font-bold text-coral-400/90 mt-0.5">IATA Account: <span id="previewIATAAcc">---</span></p>
+          <p class="text-xs font-bold text-coral-400/90">Billing Period: <span id="previewBillingPeriod">---</span></p>
         </div>
         <div class="text-right no-print">
-          <button onclick="clearCurrentAccountData()" class="text-xs bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+          <button onclick="clearCurrentAccountData()" class="text-xs bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-800/80 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
             <i class="ph-bold ph-trash"></i>
             <span>Clear Report Data</span>
           </button>
         </div>
       </div>
 
-      <!-- Report Table Preview -->
+      <!-- Table Content -->
       <div class="overflow-x-auto custom-scrollbar">
         <table class="w-full text-left text-sm text-slate-200">
-          <thead class="bg-slate-800/90 text-xs uppercase font-bold text-slate-300 border-b border-slate-700">
+          <thead class="bg-almosafer-800 text-xs uppercase font-bold text-almosafer-100 border-b border-almosafer-700">
             <tr>
-              <th class="p-3 text-center bg-slate-800 font-extrabold text-white underline" colspan="3" id="tableHeaderDueTitle">
-                PAYMENT DUE <span id="thPaymentDueDate">22 SEP 2026</span>
+              <th class="p-3 text-center bg-almosafer-800/90 font-black text-white underline tracking-wider" colspan="3" id="tableHeaderDueTitle">
+                PAYMENT DUE <span id="thPaymentDueDate">---</span>
               </th>
             </tr>
-            <tr class="bg-slate-800/50">
+            <tr class="bg-almosafer-900/90 text-almosafer-100/80">
               <th class="p-3 italic font-serif">IATA NO.</th>
               <th class="p-3 italic font-serif">Location</th>
               <th class="p-3 italic font-serif text-right">Amount (<span class="accountCurrencySpan">SAR</span>)</th>
             </tr>
           </thead>
-          <tbody id="reportTableBody" class="divide-y divide-slate-800 font-mono text-xs">
-            <!-- Dynamic IATA Rows -->
+          <tbody id="reportTableBody" class="divide-y divide-almosafer-800/60 font-mono text-xs">
+            <!-- Dynamic Rows -->
           </tbody>
-          <tfoot class="bg-purple-950/40 border-t-2 border-purple-800 font-bold">
+          <tfoot class="bg-almosafer-950 border-t-2 border-almosafer-600 font-bold">
             <tr>
-              <td class="p-3 text-right" colspan="2">Total:</td>
-              <td class="p-3 text-right text-purple-300 font-bold text-sm" id="tableTotalAmount">0.00</td>
+              <td class="p-3 text-right text-slate-300" colspan="2">Total:</td>
+              <td class="p-3 text-right text-coral-400 font-black text-sm" id="tableTotalAmount">0.00</td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      <!-- Empty State Banner -->
-      <div id="emptyState" class="py-12 text-center text-slate-500">
-        <i class="ph-duotone ph-file-x text-5xl mb-2 text-slate-600"></i>
-        <p class="text-sm">No report data uploaded for this account tab yet.</p>
-        <p class="text-xs text-slate-600 mt-1">Upload an IATA BSP PDF file above to parse numbers automatically.</p>
+      <!-- Empty State -->
+      <div id="emptyState" class="py-12 text-center text-almosafer-100/40">
+        <i class="ph-duotone ph-file-x text-5xl mb-2 text-almosafer-600"></i>
+        <p class="text-sm font-medium">No report data uploaded for this account tab yet.</p>
+        <p class="text-xs text-almosafer-100/30 mt-1">Upload an IATA BSP PDF file above to parse numbers automatically.</p>
       </div>
     </div>
 
   </main>
 
   <script>
-    // Configurable Account Settings & Data Model
+    // Configurable Account Settings with Almosafer Palette
     const ACCOUNTS = {
       ksa: { 
         id: 'ksa', 
@@ -218,17 +228,8 @@
         paymentLabel: 'PAYMENTS-KSA RUH',
         iban: 'SA3345000000511201675060',
         reportType: 'payment_details',
-        meta: {
-          companyName: 'ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.',
-          iataAccount: '7120167',
-          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
-          paymentDueDate: '22 SEP 2026'
-        },
-        items: [
-          { iataNo: '71-2 0061 4', location: 'Riyadh', amount: -8161.46 },
-          { iataNo: '71-2 0136 2', location: "Ta'if", amount: 4968.00 },
-          { iataNo: '71-2 0167 5', location: 'Riyadh', amount: 12795.20 }
-        ] 
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
+        items: [] 
       },
       uae: { 
         id: 'uae', 
@@ -240,12 +241,7 @@
         paymentLabel: 'PAYMENTS-UAE DXB',
         iban: 'AE123456789012345678901',
         reportType: 'payment_details',
-        meta: {
-          companyName: 'ALMOSAFER INTERNATIONAL TRAVEL AND TOURISM CO.',
-          iataAccount: '7120168',
-          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
-          paymentDueDate: '22 SEP 2026'
-        },
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       },
       kuwait: { 
@@ -258,12 +254,7 @@
         paymentLabel: 'PAYMENTS-KWT KWI',
         iban: 'KW987654321098765432109',
         reportType: 'payment_details',
-        meta: {
-          companyName: 'ALMOSAFER TRAVEL & TOURISM WLL',
-          iataAccount: '7120169',
-          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
-          paymentDueDate: '22 SEP 2026'
-        },
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       },
       almousim1: { 
@@ -276,12 +267,7 @@
         paymentLabel: 'PAYMENTS-ALM 1',
         iban: 'SA1111000000511201675001',
         reportType: 'payment_details',
-        meta: {
-          companyName: 'ALMOUSIM TRAVEL AND TOURS',
-          iataAccount: '7120170',
-          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
-          paymentDueDate: '22 SEP 2026'
-        },
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       },
       almousim2: { 
@@ -294,19 +280,13 @@
         paymentLabel: 'PAYMENTS-ALM 2',
         iban: 'SA2222000000511201675002',
         reportType: 'payment_details',
-        meta: {
-          companyName: 'ALMOUSIM TRAVEL SERVICES',
-          iataAccount: '7120171',
-          billingPeriod: '(08-SEP-2026 to 15-SEP-2026)',
-          paymentDueDate: '22 SEP 2026'
-        },
+        meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       }
     };
 
     let activeAccountKey = 'ksa';
 
-    // On Page Load
     document.addEventListener('DOMContentLoaded', () => {
       renderTabs();
       renderActiveAccountData();
@@ -325,13 +305,13 @@
         btn.onclick = () => switchAccount(key);
         btn.className = `flex items-center space-x-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition whitespace-nowrap ${
           isActive 
-            ? 'bg-brand-600 text-white shadow-md shadow-brand-900/40' 
-            : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+            ? 'bg-almosafer-600 text-white shadow-md shadow-almosafer-900/50 ring-1 ring-coral-500' 
+            : 'bg-almosafer-800/80 text-almosafer-100/70 hover:bg-almosafer-700 hover:text-white'
         }`;
 
         btn.innerHTML = `
           <span>${acc.name}</span>
-          <span class="px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-brand-900 text-white' : 'bg-slate-900 text-slate-400'}">
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-coral-500 text-white font-bold' : 'bg-almosafer-900 text-almosafer-100/50'}">
             ${acc.items.length}
           </span>
         `;
@@ -395,26 +375,22 @@
     function extractRemittanceData(text) {
       const acc = ACCOUNTS[activeAccountKey];
 
-      // Match Company Header Name
-      const companyMatch = text.match(/(\d{7})\s*-\s*([A-Z\s,]+(?:CO\.|WLL|LIMITED|TRAVEL))/i);
+      const companyMatch = text.match(/(\d{7})\s*-\s*([A-Z\s,]+(?:CO\.|WLL|LIMITED|TRAVEL|SERVICES))/i);
       if (companyMatch) {
         acc.meta.iataAccount = companyMatch[1];
         acc.meta.companyName = companyMatch[2].trim();
       }
 
-      // Match Billing Period e.g. (08-SEP-2026 to 15-SEP-2026)
       const periodMatch = text.match(/Billing Period[:\s]*[0-9A-Z]*\s*\(([0-9]{2}-[A-Z]{3}-[0-9]{4}\s*to\s*[0-9]{2}-[A-Z]{3}-[0-9]{4})\)/i);
       if (periodMatch) {
         acc.meta.billingPeriod = `(${periodMatch[1]})`;
       }
 
-      // Match Payment Due Date e.g. 22-SEP-2026
       const dateMatch = text.match(/DATE[\s\n]+([0-9]{2}-[A-Z]{3}-[0-9]{4})/i);
       if (dateMatch) {
         acc.meta.paymentDueDate = dateMatch[1].replace(/-/g, ' ');
       }
 
-      // Extract IATA Locations & Amounts e.g. 71-2 0061 4 ... Riyadh ... -8,161.46
       const lineRegex = /(\d{2}-\d\s\d{4}\s\d)\s+([A-Z]{2}|HE)\s+.*?\s+([A-Za-z'\s]+?)\s+([-+]?[\d,]+\.\d{2})/g;
       
       let match;
@@ -435,22 +411,20 @@
     function renderActiveAccountData() {
       const acc = ACCOUNTS[activeAccountKey];
 
-      // Update Metadata Display
-      document.getElementById('metaCompanyName').innerText = acc.meta.companyName;
-      document.getElementById('previewCompanyName').innerText = acc.meta.companyName;
-      document.getElementById('metaIATAAccount').innerText = acc.meta.iataAccount;
-      document.getElementById('previewIATAAcc').innerText = acc.meta.iataAccount;
-      document.getElementById('metaBillingPeriod').innerText = acc.meta.billingPeriod;
-      document.getElementById('previewBillingPeriod').innerText = acc.meta.billingPeriod;
-      document.getElementById('metaPaymentDueDate').innerText = acc.meta.paymentDueDate;
-      document.getElementById('thPaymentDueDate').innerText = acc.meta.paymentDueDate;
+      document.getElementById('metaCompanyName').innerText = acc.meta.companyName || '---';
+      document.getElementById('previewCompanyName').innerText = acc.meta.companyName || 'NO REPORT LOADED';
+      document.getElementById('metaIATAAccount').innerText = acc.meta.iataAccount || '---';
+      document.getElementById('previewIATAAcc').innerText = acc.meta.iataAccount || '---';
+      document.getElementById('metaBillingPeriod').innerText = acc.meta.billingPeriod || '---';
+      document.getElementById('previewBillingPeriod').innerText = acc.meta.billingPeriod || '---';
+      document.getElementById('metaPaymentDueDate').innerText = acc.meta.paymentDueDate || '---';
+      document.getElementById('thPaymentDueDate').innerText = acc.meta.paymentDueDate || '---';
 
       document.getElementById('reportTypeSelect').value = acc.reportType;
 
       const currencySpans = document.querySelectorAll('.accountCurrencySpan');
       currencySpans.forEach(s => s.innerText = acc.currency);
 
-      // Render Table Rows
       const tbody = document.getElementById('reportTableBody');
       const emptyState = document.getElementById('emptyState');
       tbody.innerHTML = '';
@@ -467,16 +441,16 @@
       acc.items.forEach((item, index) => {
         total += item.amount;
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/60 transition';
+        tr.className = 'hover:bg-almosafer-800/40 transition';
         tr.innerHTML = `
           <td class="p-3 text-slate-300">
-            <input type="text" value="${item.iataNo}" onchange="updateItem(${index}, 'iataNo', this.value)" class="bg-transparent border border-transparent hover:border-slate-700 rounded px-1 w-full font-mono">
+            <input type="text" value="${item.iataNo}" onchange="updateItem(${index}, 'iataNo', this.value)" class="bg-transparent border border-transparent hover:border-almosafer-700 rounded px-1 w-full font-mono">
           </td>
           <td class="p-3 text-slate-300">
-            <input type="text" value="${item.location}" onchange="updateItem(${index}, 'location', this.value)" class="bg-transparent border border-transparent hover:border-slate-700 rounded px-1 w-full">
+            <input type="text" value="${item.location}" onchange="updateItem(${index}, 'location', this.value)" class="bg-transparent border border-transparent hover:border-almosafer-700 rounded px-1 w-full">
           </td>
-          <td class="p-3 text-right font-bold ${item.amount < 0 ? 'text-red-400' : 'text-emerald-400'}">
-            <input type="number" step="0.01" value="${item.amount}" onchange="updateItem(${index}, 'amount', this.value)" class="bg-transparent text-right border border-transparent hover:border-slate-700 rounded px-1 w-32">
+          <td class="p-3 text-right font-bold ${item.amount < 0 ? 'text-coral-400' : 'text-emerald-400'}">
+            <input type="number" step="0.01" value="${item.amount}" onchange="updateItem(${index}, 'amount', this.value)" class="bg-transparent text-right border border-transparent hover:border-almosafer-700 rounded px-1 w-32">
           </td>
         `;
         tbody.appendChild(tr);
@@ -498,22 +472,22 @@
     function clearCurrentAccountData() {
       if (confirm(`Clear report data for ${ACCOUNTS[activeAccountKey].name}?`)) {
         ACCOUNTS[activeAccountKey].items = [];
+        ACCOUNTS[activeAccountKey].meta = { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' };
         renderTabs();
         renderActiveAccountData();
       }
     }
 
-    // EXPORT TO 2-TAB EXCEL (.xlsx) EXACTLY MATCHING YOUR IMAGE LAYOUT
     function exportTwoTabExcel() {
       const acc = ACCOUNTS[activeAccountKey];
       if (!acc.items.length) {
-        alert('No data available to export.');
+        alert('No data available to export. Please upload a PDF file first.');
         return;
       }
 
       const totalAmount = acc.items.reduce((sum, item) => sum + item.amount, 0);
 
-      // --- TAB 1: LOCATION SUMMARY ---
+      // TAB 1: LOCATION SUMMARY
       const tab1Data = [
         [acc.meta.companyName],
         [`IATA Account: ${acc.meta.iataAccount}`],
@@ -529,12 +503,10 @@
       tab1Data.push(['Total:', '', totalAmount]);
 
       const ws1 = XLSX.utils.aoa_to_sheet(tab1Data);
-
-      // Format Tab 1 Column Widths
       ws1['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 18 }];
 
-      // --- TAB 2: VENDOR POSTING SUMMARY ---
-      const periodShort = acc.meta.billingPeriod.replace(/[()]/g, '').replace(' to ', ' ');
+      // TAB 2: VENDOR POSTING SUMMARY
+      const periodShort = acc.meta.billingPeriod ? acc.meta.billingPeriod.replace(/[()]/g, '').replace(' to ', ' ') : '';
 
       const tab2Data = [
         [acc.meta.companyName],
@@ -550,16 +522,12 @@
       ];
 
       const ws2 = XLSX.utils.aoa_to_sheet(tab2Data);
-
-      // Format Tab 2 Column Widths
       ws2['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 20 }, { wch: 22 }, { wch: 32 }];
 
-      // Create Workbook & Append both Tabs
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, "Location Summary");
       XLSX.utils.book_append_sheet(wb, ws2, "Vendor Posting Summary");
 
-      // Save File
       XLSX.writeFile(wb, `Payment_Details_${acc.id.toUpperCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
   </script>
