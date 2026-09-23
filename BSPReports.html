@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BSP Reports Extractor - Payment Details Report</title>
+  <title>BSP Reports Extractor - Almosafer Payment Analytics</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -59,7 +59,7 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #006778; border-radius: 4px; }
   </style>
 </head>
-<body class="h-full flex flex-col font-sans antialiased bg-slate-50 text-slate-800">
+<body class="h-full flex flex-col font-sans antialiased bg-slate-50 text-slate-800 relative overflow-x-hidden">
 
   <!-- Top Navigation Header with Almosafer Teal Theme -->
   <header class="bg-almosafer-900 border-b border-almosafer-800 sticky top-0 z-30 no-print">
@@ -68,6 +68,10 @@
         
         <!-- Brand Logo & Title -->
         <div class="flex items-center space-x-3">
+          <button onclick="toggleHistoryDrawer()" class="bg-almosafer-800 hover:bg-almosafer-700 text-white p-2.5 rounded-lg border border-almosafer-700 transition flex items-center space-x-2" title="Open Report History">
+            <i class="ph-bold ph-clock-counter-clockwise text-xl text-coral-400"></i>
+            <span class="text-xs font-bold hidden sm:inline-block">History</span>
+          </button>
           <div class="bg-almosafer-600 p-2.5 rounded-lg text-white shadow-md flex items-center justify-center">
             <i class="ph-bold ph-airplane text-2xl"></i>
           </div>
@@ -84,11 +88,12 @@
         <div class="flex items-center space-x-3">
           <button onclick="exportTwoTabExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition shadow-md">
             <i class="ph-bold ph-file-xls text-lg"></i>
-            <span>Export Styled Excel (.xlsx)</span>
+            <span class="hidden sm:inline">Export Styled Excel (.xlsx)</span>
+            <span class="sm:hidden">Export</span>
           </button>
           <button onclick="window.print()" class="bg-almosafer-800 hover:bg-almosafer-700 text-slate-100 px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 border border-almosafer-700 transition">
             <i class="ph-bold ph-printer text-lg"></i>
-            <span>Print</span>
+            <span class="hidden md:inline">Print</span>
           </button>
         </div>
 
@@ -109,12 +114,42 @@
       <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
         <label for="reportTypeSelect" class="text-xs text-slate-500 font-medium whitespace-nowrap">Selected Report:</label>
         <select id="reportTypeSelect" onchange="changeReportType(this.value)" class="bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg p-2 focus:ring-coral-500 focus:border-coral-500 font-semibold min-w-[200px]">
-          <option value="payment_details">Payment Details Report</option>
+          <option value="Payment Details Report">Payment Details Report</option>
         </select>
       </div>
 
     </div>
   </div>
+
+  <!-- History Drawer Backdrop & Slide-Over Panel -->
+  <div id="historyBackdrop" onclick="toggleHistoryDrawer()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
+  
+  <aside id="historyDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white border-r border-slate-200 shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 flex flex-col no-print">
+    <!-- Drawer Header -->
+    <div class="p-4 bg-almosafer-900 text-white flex items-center justify-between border-b border-almosafer-800">
+      <div class="flex items-center space-x-2">
+        <i class="ph-bold ph-clock-counter-clockwise text-coral-400 text-xl"></i>
+        <h2 class="text-base font-extrabold tracking-wide">Report History</h2>
+      </div>
+      <button onclick="toggleHistoryDrawer()" class="text-slate-400 hover:text-white p-1 transition">
+        <i class="ph-bold ph-x text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Drawer Search & Controls -->
+    <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
+      <span class="text-slate-500 font-medium">Saved Weekly Runs</span>
+      <button onclick="clearAllHistory()" class="text-red-600 hover:text-red-800 font-semibold flex items-center space-x-1">
+        <i class="ph-bold ph-trash"></i>
+        <span>Clear All</span>
+      </button>
+    </div>
+
+    <!-- Hierarchical Tree Container (Year -> Account -> Month -> Reports) -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar" id="historyTreeContainer">
+      <!-- Dynamic History Tree populated here -->
+    </div>
+  </aside>
 
   <!-- Main Body Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -173,7 +208,7 @@
         <div class="text-right no-print">
           <button onclick="clearCurrentAccountData()" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
             <i class="ph-bold ph-trash"></i>
-            <span>Clear Report Data</span>
+            <span>Clear Active Data</span>
           </button>
         </div>
       </div>
@@ -216,7 +251,7 @@
   </main>
 
   <script>
-    // Configurable Account Settings with Almosafer Palette
+    // Accounts Base Configuration
     const ACCOUNTS = {
       ksa: { 
         id: 'ksa', 
@@ -227,7 +262,7 @@
         province: 'MOSAFER-KSA',
         paymentLabel: 'PAYMENTS-KSA RUH',
         iban: 'SA3345000000511201675060',
-        reportType: 'payment_details',
+        reportType: 'Payment Details Report',
         meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       },
@@ -240,7 +275,7 @@
         province: 'MOSAFER-UAE',
         paymentLabel: 'PAYMENTS-UAE DXB',
         iban: 'AE123456789012345678901',
-        reportType: 'payment_details',
+        reportType: 'Payment Details Report',
         meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       },
@@ -253,7 +288,7 @@
         province: 'MOSAFER-KWT',
         paymentLabel: 'PAYMENTS-KWT KWI',
         iban: 'KW987654321098765432109',
-        reportType: 'payment_details',
+        reportType: 'Payment Details Report',
         meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       },
@@ -266,7 +301,7 @@
         province: 'ALMOUSIM-1',
         paymentLabel: 'PAYMENTS-ALM 1',
         iban: 'SA1111000000511201675001',
-        reportType: 'payment_details',
+        reportType: 'Payment Details Report',
         meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       },
@@ -279,19 +314,54 @@
         province: 'ALMOUSIM-2',
         paymentLabel: 'PAYMENTS-ALM 2',
         iban: 'SA2222000000511201675002',
-        reportType: 'payment_details',
+        reportType: 'Payment Details Report',
         meta: { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' },
         items: [] 
       }
     };
 
     let activeAccountKey = 'ksa';
+    const STORAGE_KEY = 'ALMOSAFER_BSP_REPORT_HISTORY_V1';
+
+    // LocalStorage Helper Functions
+    function getStoredHistory() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+      } catch (e) {
+        console.error('Failed to read history from localStorage', e);
+        return {};
+      }
+    }
+
+    function saveStoredHistory(historyObj) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(historyObj));
+      } catch (e) {
+        console.error('Failed to save history to localStorage', e);
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       renderTabs();
       renderActiveAccountData();
+      renderHistoryTree();
       setupEventListeners();
     });
+
+    function toggleHistoryDrawer() {
+      const drawer = document.getElementById('historyDrawer');
+      const backdrop = document.getElementById('historyBackdrop');
+      const isHidden = drawer.classList.contains('-translate-x-full');
+
+      if (isHidden) {
+        drawer.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        drawer.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
 
     function renderTabs() {
       const container = document.getElementById('accountTabs');
@@ -351,6 +421,7 @@
       badge.classList.remove('flex');
       renderTabs();
       renderActiveAccountData();
+      renderHistoryTree();
       e.target.value = '';
     }
 
@@ -374,7 +445,6 @@
 
     function cleanLocationName(rawLoc) {
       if (!rawLoc) return '';
-      // Strip out "INTERNATIONAL TRAVEL AND TOURISM CO" or similar trailing company strings
       return rawLoc
         .replace(/INTERNATIONAL\s+TRAVEL\s+(AND|&)\s+TOURISM\s+(CO\.|COMPANY|CO)?/gi, '')
         .replace(/TRAVEL\s+(AND|&)\s+TOURISM\s+(CO\.|COMPANY|CO)?/gi, '')
@@ -404,7 +474,7 @@
         acc.meta.paymentDueDate = dueDateMatch[1].replace(/-/g, ' ');
       }
 
-      // Extract IATA Location & Remittance Amounts
+      // Extract Locations & Amounts
       const lineRegex = /(\d{2}-\d\s\d{4}\s\d)\s+([A-Z]{2}|HE)\s+.*?\s+([A-Za-z'\s]+?)\s+([-+]?[\d,]+\.\d{2})/g;
       
       let match;
@@ -420,6 +490,226 @@
 
       if (parsedItems.length > 0) {
         acc.items = parsedItems;
+        saveReportToHistory(acc);
+      }
+    }
+
+    // Save parsed report into LocalStorage (Year -> Account -> Month -> Entry)
+    function saveReportToHistory(acc) {
+      const history = getStoredHistory();
+
+      // Extract Year and Month from billing period (e.g., 08-SEP-2026 to 15-SEP-2026)
+      let year = '2026';
+      let monthName = 'September';
+
+      const yearMatch = acc.meta.billingPeriod.match(/\d{2}-[A-Z]{3}-(\d{4})/i);
+      if (yearMatch) year = yearMatch[1];
+
+      const monthMatch = acc.meta.billingPeriod.match(/\d{2}-([A-Z]{3})-\d{4}/i);
+      if (monthMatch) {
+        const monthMap = {
+          JAN: 'January', FEB: 'February', MAR: 'March', APR: 'April',
+          MAY: 'May', JUN: 'June', JUL: 'July', AUG: 'August',
+          SEP: 'September', OCT: 'October', NOV: 'November', DEC: 'December'
+        };
+        monthName = monthMap[monthMatch[1].toUpperCase()] || monthName;
+      }
+
+      if (!history[year]) history[year] = {};
+      if (!history[year][acc.id]) history[year][acc.id] = {};
+      if (!history[year][acc.id][monthName]) history[year][acc.id][monthName] = [];
+
+      const reportId = `${acc.id}_${acc.meta.billingPeriod.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+      // Replace existing or push new entry
+      const existingIdx = history[year][acc.id][monthName].findIndex(r => r.id === reportId);
+      const entry = {
+        id: reportId,
+        accountKey: acc.id,
+        accountName: acc.name,
+        currency: acc.currency,
+        reportType: acc.reportType,
+        meta: { ...acc.meta },
+        items: [...acc.items],
+        timestamp: new Date().toISOString()
+      };
+
+      if (existingIdx >= 0) {
+        history[year][acc.id][monthName][existingIdx] = entry;
+      } else {
+        history[year][acc.id][monthName].push(entry);
+      }
+
+      saveStoredHistory(history);
+    }
+
+    function renderHistoryTree() {
+      const container = document.getElementById('historyTreeContainer');
+      const history = getStoredHistory();
+      container.innerHTML = '';
+
+      const years = Object.keys(history);
+      if (!years.length) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-slate-400">
+            <i class="ph-duotone ph-folder-open text-4xl mb-2 text-slate-300"></i>
+            <p class="text-xs font-semibold text-slate-600">No report history saved yet.</p>
+            <p class="text-[10px] text-slate-400 mt-1">Uploaded weekly PDF reports will automatically group here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      years.sort().reverse().forEach(year => {
+        const yearBlock = document.createElement('div');
+        yearBlock.className = 'border border-slate-200 rounded-lg overflow-hidden bg-slate-50/50';
+
+        // Year Node Header
+        const yearHeader = document.createElement('button');
+        yearHeader.className = 'w-full px-3 py-2 bg-slate-100 hover:bg-slate-200 flex items-center justify-between text-xs font-bold text-slate-800 transition';
+        yearHeader.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <i class="ph-bold ph-calendar text-almosafer-600"></i>
+            <span>Year ${year}</span>
+          </div>
+          <i class="ph-bold ph-caret-down text-slate-400"></i>
+        `;
+
+        const yearContent = document.createElement('div');
+        yearContent.className = 'p-2 space-y-2';
+
+        yearHeader.onclick = () => yearContent.classList.toggle('hidden');
+
+        // Accounts Nodes
+        const accountKeys = Object.keys(ACCOUNTS);
+        accountKeys.forEach(accKey => {
+          const accDef = ACCOUNTS[accKey];
+          const accData = history[year]?.[accKey] || {};
+          const months = Object.keys(accData);
+
+          const accNode = document.createElement('div');
+          accNode.className = 'border-l-2 border-almosafer-500 ml-2 pl-2';
+
+          const accHeader = document.createElement('button');
+          accHeader.className = 'w-full text-left py-1 text-xs font-semibold text-slate-700 hover:text-almosafer-600 flex items-center justify-between';
+          
+          let totalReportsCount = 0;
+          months.forEach(m => totalReportsCount += accData[m].length);
+
+          accHeader.innerHTML = `
+            <span class="flex items-center space-x-1.5">
+              <i class="ph-bold ph-folder text-amber-500"></i>
+              <span>${accDef.name}</span>
+            </span>
+            <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.2 rounded-full font-mono">${totalReportsCount}</span>
+          `;
+
+          const accContent = document.createElement('div');
+          accContent.className = 'ml-3 mt-1 space-y-1.5 hidden';
+          accHeader.onclick = () => accContent.classList.toggle('hidden');
+
+          if (months.length === 0) {
+            accContent.innerHTML = `<p class="text-[10px] text-slate-400 italic py-1">No saved reports</p>`;
+          } else {
+            months.forEach(month => {
+              const monthReports = accData[month];
+              
+              const monthNode = document.createElement('div');
+              const monthHeader = document.createElement('button');
+              monthHeader.className = 'w-full text-left py-0.5 text-[11px] font-medium text-slate-600 hover:text-coral-600 flex items-center justify-between';
+              monthHeader.innerHTML = `
+                <span class="flex items-center space-x-1">
+                  <i class="ph-bold ph-calendar-blank text-slate-400"></i>
+                  <span>${month}</span>
+                </span>
+                <span class="text-[10px] text-slate-400">(${monthReports.length})</span>
+              `;
+
+              const monthContent = document.createElement('div');
+              monthContent.className = 'ml-2 space-y-1.5 mt-1 hidden';
+              monthHeader.onclick = () => monthContent.classList.toggle('hidden');
+
+              monthReports.forEach(report => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'p-2 bg-white rounded border border-slate-200 shadow-2xs hover:border-almosafer-500 transition text-[11px] space-y-1';
+                itemCard.innerHTML = `
+                  <div class="font-bold text-slate-800 leading-tight">
+                    ${report.meta.billingPeriod || 'N/A'}
+                  </div>
+                  <div class="text-[10px] text-coral-600 font-medium">
+                    ${report.reportType}
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-slate-100 mt-1">
+                    <button onclick="loadReportFromHistory('${year}', '${accKey}', '${month}', '${report.id}')" class="text-almosafer-600 hover:text-almosafer-800 font-bold text-[10px] flex items-center space-x-0.5">
+                      <i class="ph-bold ph-eye"></i>
+                      <span>Load</span>
+                    </button>
+                    <button onclick="exportHistoryExcel('${year}', '${accKey}', '${month}', '${report.id}')" class="text-emerald-600 hover:text-emerald-800 font-bold text-[10px] flex items-center space-x-0.5">
+                      <i class="ph-bold ph-file-xls"></i>
+                      <span>Excel</span>
+                    </button>
+                    <button onclick="deleteReportFromHistory('${year}', '${accKey}', '${month}', '${report.id}')" class="text-slate-400 hover:text-red-600 text-[10px] p-0.5" title="Delete">
+                      <i class="ph-bold ph-trash"></i>
+                    </button>
+                  </div>
+                `;
+                monthContent.appendChild(itemCard);
+              });
+
+              monthNode.appendChild(monthHeader);
+              monthNode.appendChild(monthContent);
+              accContent.appendChild(monthNode);
+            });
+          }
+
+          accNode.appendChild(accHeader);
+          accNode.appendChild(accContent);
+          yearContent.appendChild(accNode);
+        });
+
+        yearBlock.appendChild(yearHeader);
+        yearBlock.appendChild(yearContent);
+        container.appendChild(yearBlock);
+      });
+    }
+
+    // Load Report directly into active screen
+    function loadReportFromHistory(year, accKey, month, reportId) {
+      const history = getStoredHistory();
+      const report = history[year]?.[accKey]?.[month]?.find(r => r.id === reportId);
+
+      if (!report) return;
+
+      activeAccountKey = accKey;
+      ACCOUNTS[accKey].meta = { ...report.meta };
+      ACCOUNTS[accKey].items = [...report.items];
+      ACCOUNTS[accKey].reportType = report.reportType;
+
+      renderTabs();
+      renderActiveAccountData();
+      toggleHistoryDrawer();
+    }
+
+    // Delete Report from LocalStorage
+    function deleteReportFromHistory(year, accKey, month, reportId) {
+      if (!confirm('Are you sure you want to delete this saved report from history?')) return;
+
+      const history = getStoredHistory();
+      if (history[year]?.[accKey]?.[month]) {
+        history[year][accKey][month] = history[year][accKey][month].filter(r => r.id !== reportId);
+        if (history[year][accKey][month].length === 0) delete history[year][accKey][month];
+        if (Object.keys(history[year][accKey]).length === 0) delete history[year][accKey];
+        if (Object.keys(history[year]).length === 0) delete history[year];
+        
+        saveStoredHistory(history);
+        renderHistoryTree();
+      }
+    }
+
+    function clearAllHistory() {
+      if (confirm('Are you sure you want to clear ALL saved report history? This action cannot be undone.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderHistoryTree();
       }
     }
 
@@ -485,7 +775,7 @@
     }
 
     function clearCurrentAccountData() {
-      if (confirm(`Clear report data for ${ACCOUNTS[activeAccountKey].name}?`)) {
+      if (confirm(`Clear active data for ${ACCOUNTS[activeAccountKey].name}?`)) {
         ACCOUNTS[activeAccountKey].items = [];
         ACCOUNTS[activeAccountKey].meta = { companyName: '', iataAccount: '', billingPeriod: '', paymentDueDate: '' };
         renderTabs();
@@ -493,28 +783,41 @@
       }
     }
 
-    // HIGHLY AESTHETIC STYLED DUAL-TAB EXCEL EXPORT (EXCELJS ENGINE)
     async function exportTwoTabExcel() {
       const acc = ACCOUNTS[activeAccountKey];
       if (!acc.items.length) {
         alert('No data available to export. Please upload a PDF file first.');
         return;
       }
+      await generateExcelFile(acc);
+    }
 
+    async function exportHistoryExcel(year, accKey, month, reportId) {
+      const history = getStoredHistory();
+      const report = history[year]?.[accKey]?.[month]?.find(r => r.id === reportId);
+      if (!report) return;
+
+      const accData = {
+        ...ACCOUNTS[accKey],
+        meta: report.meta,
+        items: report.items,
+        reportType: report.reportType
+      };
+
+      await generateExcelFile(accData);
+    }
+
+    async function generateExcelFile(acc) {
       const workbook = new ExcelJS.Workbook();
 
-      // Palette
       const tealHeaderColor = 'FF006778';
       const redHeaderColor = 'FFFF0000';
       const lightRowColor = 'FFF8FAFC';
       const totalFillColor = 'FFD9D2E9';
 
-      // ==========================================
       // TAB 1: LOCATION SUMMARY
-      // ==========================================
       const ws1 = workbook.addWorksheet('Location Summary', { views: [{ showGridLines: true }] });
 
-      // Title Banner
       const r1 = ws1.addRow([acc.meta.companyName]);
       const r2 = ws1.addRow([`IATA Account: ${acc.meta.iataAccount}`]);
       const r3 = ws1.addRow([`Billing Perod: ${acc.meta.billingPeriod}`]);
@@ -527,7 +830,6 @@
         cell.alignment = { horizontal: 'center' };
       });
 
-      // Header Row
       const h1 = ws1.addRow(['IATA NO.', 'Location', `Amount (${acc.currency})`]);
       h1.eachCell(cell => {
         cell.font = { name: 'Calibri', size: 11, bold: true, italic: true };
@@ -535,7 +837,6 @@
         cell.alignment = { horizontal: cell.col === 3 ? 'right' : 'left' };
       });
 
-      // Data Rows
       acc.items.forEach((item, idx) => {
         const row = ws1.addRow([item.iataNo, item.location, item.amount]);
         row.getCell(1).alignment = { horizontal: 'left' };
@@ -551,7 +852,6 @@
         });
       });
 
-      // Total Row
       const totalAmount = acc.items.reduce((sum, item) => sum + item.amount, 0);
       const totalRow = ws1.addRow(['Total:', '', totalAmount]);
       ws1.mergeCells(totalRow.number, 1, totalRow.number, 2);
@@ -574,9 +874,7 @@
       ws1.getColumn(2).width = 28;
       ws1.getColumn(3).width = 22;
 
-      // ==========================================
       // TAB 2: VENDOR POSTING SUMMARY
-      // ==========================================
       const ws2 = workbook.addWorksheet('Vendor Posting Summary', { views: [{ showGridLines: true }] });
 
       const t2_r1 = ws2.addRow([acc.meta.companyName]);
@@ -608,7 +906,6 @@
         cell.alignment = { horizontal: 'center' };
       });
 
-      // Bank Details block
       const bankDetails = [
         'BIC/SWIFT-SABBSARI',
         'BENEFICIARY NAME',
@@ -631,7 +928,6 @@
       ws2.getColumn(5).width = 24;
       ws2.getColumn(6).width = 34;
 
-      // Download File
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
